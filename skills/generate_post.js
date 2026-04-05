@@ -7,7 +7,7 @@ import fetch from 'node-fetch';
 import { config } from '../config/config.js';
 import { logger } from '../utils/logger.js';
 
-/** @typedef {'facebook' | 'twitter' | 'linkedin' | 'youtube'} Platform */
+/** @typedef {'facebook' | 'twitter' | 'linkedin' | 'youtube' | 'whatsapp'} Platform */
 
 /**
  * @param {string} topic
@@ -37,6 +37,13 @@ For ${base}
 Return exactly two lines in this format (no other text):
 TITLE: [compelling title, max 100 characters]
 DESCRIPTION: [2–5 sentences, keywords, 2–4 hashtags at end]`;
+
+    case 'whatsapp':
+      return `You are a copywriter for WhatsApp Business broadcast-style messages.
+
+Write ONE message about ${base}
+Friendly, conversational, short paragraphs or line breaks for mobile reading.
+Include 2–4 tasteful emojis, one clear CTA. Stay under 900 characters. No markdown headings.`;
 
     case 'facebook':
     default:
@@ -77,7 +84,10 @@ Produce EXACTLY these sections in order. Each section starts on its own line wit
 [One line, max 100 characters, compelling click-worthy title]
 
 ===YOUTUBE_DESCRIPTION===
-[YouTube description: 2–5 sentences, SEO keywords, end with 2–4 hashtags]`;
+[YouTube description: 2–5 sentences, SEO keywords, end with 2–4 hashtags]
+
+===WHATSAPP===
+[WhatsApp text: conversational, mobile-friendly line breaks, 2–4 emojis, CTA. Max ~900 characters.]`;
 }
 
 /**
@@ -100,17 +110,19 @@ export function parseMultiPlatformOutput(raw) {
 function fallbackPack(topic, singleFacebook) {
   const fb = singleFacebook.trim();
   const tw = fb.length > 280 ? `${fb.slice(0, 277)}…` : fb;
+  const wa = fb.length > 900 ? `${fb.slice(0, 897)}…` : fb;
   return {
     facebook: fb,
     twitter: tw,
     linkedin: fb,
     youtubeTitle: topic.slice(0, 100),
     youtubeDescription: `${fb}\n\n#content #video`,
+    whatsapp: wa,
   };
 }
 
 /**
- * @returns {Promise<{ facebook: string, twitter: string, linkedin: string, youtubeTitle: string, youtubeDescription: string }>}
+ * @returns {Promise<{ facebook: string, twitter: string, linkedin: string, youtubeTitle: string, youtubeDescription: string, whatsapp: string }>}
  */
 export async function generateMultiPlatformPack(topic) {
   if (!topic || !String(topic).trim()) {
@@ -182,12 +194,20 @@ export async function generateMultiPlatformPack(topic) {
     ? `${twitter.slice(0, (config.twitter.maxChars || 280) - 1)}…`
     : twitter;
 
+  let whatsapp = (sections.whatsapp || '').trim();
+  if (!whatsapp) {
+    whatsapp = facebook.length > 900 ? `${facebook.slice(0, 897)}…` : facebook;
+  } else if (whatsapp.length > 4096) {
+    whatsapp = `${whatsapp.slice(0, 4093)}…`;
+  }
+
   return {
     facebook,
     twitter: twFinal,
     linkedin,
     youtubeTitle,
     youtubeDescription,
+    whatsapp,
   };
 }
 

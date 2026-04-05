@@ -61,8 +61,20 @@ export const config = {
     videoId: req('YOUTUBE_VIDEO_ID'),
   },
 
-  /** Comma-separated: facebook,twitter,linkedin,youtube */
-  platforms: (req('PLATFORMS') || 'facebook,twitter,linkedin,youtube')
+  /**
+   * WhatsApp Business Cloud API (same Meta developer ecosystem as Facebook).
+   */
+  whatsapp: {
+    accessToken: req('WHATSAPP_ACCESS_TOKEN'),
+    /** From WhatsApp → API setup in Meta Developer Console */
+    phoneNumberId: req('WHATSAPP_PHONE_NUMBER_ID'),
+    /** E.164 digits only, comma-separated for multiple (e.g. 15551234567,447700900123) */
+    to: req('WHATSAPP_TO'),
+    graphVersion: req('WHATSAPP_GRAPH_VERSION') || 'v21.0',
+  },
+
+  /** Comma-separated: facebook,twitter,linkedin,youtube,whatsapp */
+  platforms: (req('PLATFORMS') || 'facebook,twitter,linkedin,youtube,whatsapp')
     .split(',')
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean),
@@ -106,6 +118,15 @@ export function assertYouTubeConfig() {
   if (!y.videoId) {
     throw new Error(
       'YouTube: set YOUTUBE_VIDEO_ID to an existing video ID on your channel (this flow updates title/description via Data API).'
+    );
+  }
+}
+
+export function assertWhatsAppConfig() {
+  const w = config.whatsapp;
+  if (!w.accessToken || !w.phoneNumberId || !w.to) {
+    throw new Error(
+      'WhatsApp: set WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID, and WHATSAPP_TO (recipient(s), digits + country code).'
     );
   }
 }

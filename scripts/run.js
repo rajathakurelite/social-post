@@ -7,13 +7,14 @@
  *   npm start -- "Indian history"
  *   node scripts/run.js --only=facebook,linkedin "Topic here"
  *
- * Platforms default from env PLATFORMS=facebook,twitter,linkedin,youtube
+ * Platforms default from env PLATFORMS=facebook,twitter,linkedin,youtube,whatsapp
  */
 import { generateMultiPlatformPack } from '../skills/generate_post.js';
 import { postToFacebook } from '../skills/post_facebook.js';
 import { postToTwitter } from '../skills/post_twitter.js';
 import { postToLinkedIn } from '../skills/post_linkedin.js';
 import { postToYouTube } from '../skills/post_youtube.js';
+import { postToWhatsApp } from '../skills/post_whatsapp.js';
 import {
   config,
   hasTwitterConfig,
@@ -21,6 +22,7 @@ import {
   assertTwitterConfig,
   assertLinkedInConfig,
   assertYouTubeConfig,
+  assertWhatsAppConfig,
 } from '../config/config.js';
 import { logger } from '../utils/logger.js';
 
@@ -67,14 +69,14 @@ async function main() {
   const { topic, only } = parseArgs(process.argv.slice(2));
   if (!topic) {
     logger.error('Missing topic. Example: node scripts/run.js "Indian history"');
-    logger.info('Optional: --only=facebook,twitter,linkedin,youtube');
+    logger.info('Optional: --only=facebook,twitter,linkedin,youtube,whatsapp');
     logger.info('Or: npm start -- "your topic here"');
     process.exitCode = 1;
     return;
   }
 
   const platforms = only?.length ? only : config.platforms;
-  const allowed = new Set(['facebook', 'twitter', 'linkedin', 'youtube']);
+  const allowed = new Set(['facebook', 'twitter', 'linkedin', 'youtube', 'whatsapp']);
   const selected = platforms.filter((p) => {
     if (!allowed.has(p)) {
       logger.info(`Ignoring unknown platform: ${p}`);
@@ -102,6 +104,7 @@ async function main() {
       facebookChars: pack.facebook.length,
       twitterChars: pack.twitter.length,
       linkedinChars: pack.linkedin.length,
+      whatsappChars: pack.whatsapp.length,
     });
     logger.info('Twitter preview', pack.twitter);
   } catch (e) {
@@ -159,6 +162,16 @@ async function main() {
       if (!ok) anyFailed = true;
     } catch (e) {
       logger.info(`Skipping YouTube: ${e.message}`);
+    }
+  }
+
+  if (selected.includes('whatsapp')) {
+    try {
+      assertWhatsAppConfig();
+      const ok = await runPlatform('WhatsApp', () => postToWhatsApp(pack.whatsapp));
+      if (!ok) anyFailed = true;
+    } catch (e) {
+      logger.info(`Skipping WhatsApp: ${e.message}`);
     }
   }
 
