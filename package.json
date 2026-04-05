@@ -1,0 +1,23 @@
+{
+  "name": "ai-social-agent",
+  "version": "1.0.0",
+  "description": "AI social automation: Ollama (Gemma) copy + Facebook, X, LinkedIn, YouTube (metadata).",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node scripts/run.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "node-fetch": "^3.3.2"
+  },
+  "keywords": [
+    "ollama",
+    "facebook",
+    "social",
+    "automation"
+  ],
+  "license": "MIT"
+}
