@@ -6,9 +6,11 @@
 
 `POST {OLLAMA_URL}/api/generate`
 
+Every prompt injects the brand brief from `config/brand/{BRAND_PROFILE}.md` (default **airepro**). The CLI topic is an **angle** within that brand (e.g. remote internships)—edit `config/brand/airepro.md` to update messaging without code changes.
+
 The runner checks `/api/tags` before generate. Unreachable host or missing `MODEL` fails with an actionable message (`ollama serve` / `ollama pull`). Generation failure exits the whole run with code **1** (platforms never publish without successful copy).
 
-Defaults if unset: `OLLAMA_URL=http://localhost:11434`, `MODEL=gemma:7b-instruct`.
+Defaults if unset: `OLLAMA_URL=http://localhost:11434`, `MODEL=gemma:7b-instruct`, `BRAND_PROFILE=airepro`.
 
 ## Required `.env` vars
 
@@ -16,6 +18,7 @@ Defaults if unset: `OLLAMA_URL=http://localhost:11434`, `MODEL=gemma:7b-instruct
 |----------|---------|
 | `OLLAMA_URL` | Base URL of the Ollama server (no trailing slash required) |
 | `MODEL` | Exact model tag from `ollama list` (e.g. `gemma:7b-instruct`) |
+| `BRAND_PROFILE` | Optional. Brand brief file under `config/brand/` (default `airepro`) |
 
 Related ops (optional): `OLLAMA_TIMEOUT_MS` (default `120000`), `HTTP_TIMEOUT_MS`, `HTTP_RETRIES`.
 

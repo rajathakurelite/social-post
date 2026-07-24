@@ -7,18 +7,19 @@ Production-oriented Node.js automation that uses **Ollama** (Gemma) to draft soc
 ## Table of contents
 
 1. [Quick setup & run](#quick-setup--run)
-2. [Team workflow — how members collect credentials](#team-workflow--how-members-collect-credentials)
-3. [Environment variables quick reference](#environment-variables-quick-reference)
-4. [Plugin: Ollama (AI generation)](#plugin-ollama-ai-generation)
-5. [Plugin: Facebook Page](#plugin-facebook-page)
-6. [Plugin: Twitter / X](#plugin-twitter--x)
-7. [Plugin: LinkedIn](#plugin-linkedin)
-8. [Plugin: YouTube](#plugin-youtube)
-9. [Plugin: WhatsApp Business](#plugin-whatsapp-business)
-10. [Running, platforms, and troubleshooting](#running-platforms-and-troubleshooting)
-11. [Platform guides (`docs/`)](#platform-guides-docs)
-12. [Project layout](#project-layout)
-13. [Security](#security)
+2. [Local operator UI](#local-operator-ui)
+3. [Team workflow — how members collect credentials](#team-workflow--how-members-collect-credentials)
+4. [Environment variables quick reference](#environment-variables-quick-reference)
+5. [Plugin: Ollama (AI generation)](#plugin-ollama-ai-generation)
+6. [Plugin: Facebook Page](#plugin-facebook-page)
+7. [Plugin: Twitter / X](#plugin-twitter--x)
+8. [Plugin: LinkedIn](#plugin-linkedin)
+9. [Plugin: YouTube](#plugin-youtube)
+10. [Plugin: WhatsApp Business](#plugin-whatsapp-business)
+11. [Running, platforms, and troubleshooting](#running-platforms-and-troubleshooting)
+12. [Platform guides (`docs/`)](#platform-guides-docs)
+13. [Project layout](#project-layout)
+14. [Security](#security)
 
 ---
 
@@ -27,18 +28,53 @@ Production-oriented Node.js automation that uses **Ollama** (Gemma) to draft soc
 ```bash
 cd ai-social-agent
 npm install
+npx playwright install chromium   # required for Facebook visual creatives (HTML→PNG)
 cp .env.example .env   # Windows: copy .env.example .env
 ```
 
 Fill `.env` using the sections below. Set **`PLATFORMS`** to only the networks you have configured. Use **`*_ENABLED=false`** as a hard off-switch (see [docs/](./docs/README.md)).
 
+Facebook defaults to **visual** posts (`FACEBOOK_POST_MODE=visual`): a short 3-line caption plus a branded PNG rendered from `templates/airepro-internship.html` via Playwright, published with the Photos API. Use `FACEBOOK_POST_MODE=text` or `--text-only` for classic feed text.
+
 ```bash
 node scripts/run.js "Your topic"
 npm start -- "Your topic"
 node scripts/run.js --only=facebook,whatsapp "Your topic"
+node scripts/run.js --dry-run --only=facebook "dream internship for students"   # caption + PNG path; no publish
 node scripts/run.js --dry-run "Your topic"   # generate only; no publish
 # or: DRY_RUN=1 node scripts/run.js "Your topic"
 ```
+
+Topics are **brand angles** (default Airepro via `config/brand/airepro.md` / `BRAND_PROFILE`); edit the brief to change messaging. Dry-run logs the full Facebook caption (and creative PNG path in visual mode) for copy review.
+
+---
+
+## Local operator UI
+
+Single-operator compose UI on **localhost** (no login). The Express API binds to `127.0.0.1` and reuses project `.env` credentials — tokens are never returned to the browser.
+
+```bash
+npm install
+npm run dev          # API :8787 + Vite UI :5173
+# or separately:
+npm run dev:api      # http://127.0.0.1:8787
+npm run dev:web      # http://127.0.0.1:5173 (proxies /api → API)
+```
+
+Open **http://127.0.0.1:5173**. Flow: enter topic → optional image upload → platforms (**Facebook on** by default; others off until toggled) → **Polish** (Ollama; cancel supported) → edit side-by-side cards → **Dry-run publish** (default **ON**) or live Publish.
+
+**Facebook image:** leave the dropzone empty to auto-generate the Airepro branded PNG (HTML→Playwright). Or upload one JPEG/PNG/WebP (max **5 MB**, any aspect, no crop) — that file **replaces** the auto creative for Facebook photo publish. Other networks stay text-only in v1.
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /api/health` | Ollama reachability + platform enabled/configured flags (no secrets) |
+| `POST /api/upload` | Multipart `image` → `{ uploadId, url }` under `output/uploads/` |
+| `GET /api/uploads/:filename` | Serve operator upload (path-safe) |
+| `POST /api/polish` | `{ topic, notes?, platforms[], uploadId? }` → polished copy (+ image preview URL) |
+| `POST /api/publish` | `{ dryRun?, platforms[], posts, uploadId? }` → per-platform results (dry-run skips Graph) |
+| `GET /api/creatives/:filename` | Serve rendered PNG under `output/creatives/` |
+
+Optional env: `UI_API_HOST` (default `127.0.0.1`), `UI_API_PORT` (default `8787`). Uploads land in `output/uploads/` (gitignored).
 
 ---
 
@@ -102,13 +138,13 @@ WhatsApp:
 
 | Plugin | Required env vars | Optional |
 |--------|-------------------|----------|
-| **Ollama** | `OLLAMA_URL`, `MODEL` | — |
-| **Facebook** | `FB_PAGE_ID`, `FB_PAGE_TOKEN` | `FB_GRAPH_VERSION` |
+| **Ollama** | `OLLAMA_URL`, `MODEL` | `BRAND_PROFILE` (default `airepro` → `config/brand/airepro.md`) |
+| **Facebook** | `FB_PAGE_ID`, `FB_PAGE_TOKEN` | `FB_GRAPH_VERSION`, `FACEBOOK_POST_MODE` (`visual` default / `text`), `AIREPRO_INTERNSHIPS_URL` |
 | **Twitter** | OAuth2: `TWITTER_OAUTH2_ACCESS_TOKEN` **or** OAuth1: `TWITTER_API_KEY`, `TWITTER_API_SECRET`, `TWITTER_ACCESS_TOKEN`, `TWITTER_ACCESS_TOKEN_SECRET` | `TWITTER_MAX_CHARS` |
 | **LinkedIn** | `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_AUTHOR_URN` | `LINKEDIN_VERSION` |
 | **YouTube** | `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN`, `YOUTUBE_VIDEO_ID` | — |
 | **WhatsApp** | `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TO` | `WHATSAPP_GRAPH_VERSION` |
-| **Runner** | — | `PLATFORMS`, `FACEBOOK_ENABLED` / `TWITTER_ENABLED` / `LINKEDIN_ENABLED` / `YOUTUBE_ENABLED` / `WHATSAPP_ENABLED`, `DRY_RUN`, `HTTP_TIMEOUT_MS`, `OLLAMA_TIMEOUT_MS`, `HTTP_RETRIES` |
+| **Runner** | — | `PLATFORMS`, `FACEBOOK_ENABLED` / `TWITTER_ENABLED` / `LINKEDIN_ENABLED` / `YOUTUBE_ENABLED` / `WHATSAPP_ENABLED`, `DRY_RUN`, `BRAND_PROFILE`, `HTTP_TIMEOUT_MS`, `OLLAMA_TIMEOUT_MS`, `HTTP_RETRIES` |
 
 ---
 
@@ -134,7 +170,12 @@ WhatsApp:
 
 ## Plugin: Facebook Page
 
-**What it does:** `POST https://graph.facebook.com/{version}/{page-id}/feed` — publishes a **Page post** (not a personal profile post).
+**What it does:**
+
+- **Visual (default):** Renders `templates/airepro-internship.html` → PNG (`skills/render_creative.js` + Playwright), then `POST /{page-id}/photos` with caption + image.
+- **Text:** `POST https://graph.facebook.com/{version}/{page-id}/feed` — classic Page message post.
+
+Set `FACEBOOK_POST_MODE=visual|text`, or pass `--text-only` on the CLI. Creative assets: `assets/airepro/` (see folder README). After `npm install`, run **`npx playwright install chromium`**.
 
 ### Permissions and products
 
@@ -166,6 +207,12 @@ WhatsApp:
 ### Optional: `FB_GRAPH_VERSION`
 
 Default in code is `v19.0`. Change only if your org standardizes another version (e.g. `v21.0`).
+
+### Optional: `FACEBOOK_POST_MODE` / `AIREPRO_INTERNSHIPS_URL`
+
+- `FACEBOOK_POST_MODE=visual` (default) — short caption + PNG via Photos API.
+- `FACEBOOK_POST_MODE=text` — feed text only.
+- `AIREPRO_INTERNSHIPS_URL` — URL shown on the creative CTA (default `https://airepro.in/view/internships`).
 
 ---
 
@@ -318,17 +365,24 @@ Credential collection detail remains in the Plugin sections above; use `docs/` f
 |------|------|
 | `docs/` | Per-platform operator guides + enable-flag rules |
 | `config/config.js` | Env loading, platform toggles, assertion helpers |
+| `config/brand/` | Brand briefs (`airepro.md`) |
+| `assets/airepro/` | Logo / hero assets for HTML creatives |
+| `templates/` | HTML creative templates (Playwright screenshot) |
+| `output/creatives/` | Generated PNGs (gitignored) |
 | `utils/logger.js` | `info`, `error`, `success` (secret-key redaction) |
 | `utils/http_fetch.js` | Shared fetch timeout + retry helper |
 | `utils/twitter_oauth1.js` | OAuth 1.0a signing for X |
 | `utils/google_access_token.js` | Google refresh-token → access token |
-| `skills/generate_post.js` | Ollama `/api/generate`, multi-platform parsing |
-| `skills/post_facebook.js` | Page feed |
+| `skills/generate_post.js` | Ollama `/api/generate`, multi-platform + FB creative fields |
+| `skills/render_creative.js` | HTML → PNG via Playwright |
+| `skills/post_facebook.js` | Page feed + Photos API |
 | `skills/post_twitter.js` | `POST /2/tweets` |
 | `skills/post_linkedin.js` | LinkedIn `rest/posts` |
 | `skills/post_youtube.js` | `videos.list` + `videos.update` |
 | `skills/post_whatsapp.js` | WhatsApp Cloud API text messages |
 | `scripts/run.js` | CLI orchestration |
+| `server/index.js` | Local operator Express API (`/api/health`, `/api/upload`, `/api/polish`, `/api/publish`) |
+| `web/` | Vite + React compose UI (Airepro operator + optional image dropzone) |
 
 ---
 

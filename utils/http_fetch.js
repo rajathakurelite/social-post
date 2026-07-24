@@ -2,7 +2,9 @@
  * Shared outbound HTTP: timeouts + bounded retries for transient failures.
  * Retries only on network/timeout errors and HTTP 429/5xx (not 401/403).
  */
-import fetch from 'node-fetch';
+// Prefer Node's built-in fetch (undici). node-fetch has stalled mid-response
+// against local Docker Ollama while Express requests are in flight.
+const fetch = globalThis.fetch;
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 /** Extra attempts after the first (total attempts = retries + 1). */

@@ -7,11 +7,22 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "start": "node scripts/run.js"
+    "start": "node scripts/run.js",
+    "dev:api": "node server/index.js",
+    "dev:web": "vite --config web/vite.config.js",
+    "dev": "concurrently -n api,web -c magenta,cyan \"npm run dev:api\" \"npm run dev:web\"",
+    "build:web": "vite build --config web/vite.config.js"
   },
   "dependencies": {
+    "concurrently": "^10.0.3",
+    "cors": "^2.8.6",
     "dotenv": "^16.4.7",
-    "node-fetch": "^3.3.2"
+    "express": "^5.2.1",
+    "multer": "^2.2.0",
+    "node-fetch": "^3.3.2",
+    "playwright": "^1.61.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "keywords": [
     "ollama",
@@ -19,5 +30,9 @@
     "social",
     "automation"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.4",
+    "vite": "^8.1.5"
+  }
 }

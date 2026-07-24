@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Airepro Internship Creative</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --magenta: #c4007a;
+      --magenta-bright: #e6007e;
+      --purple-deep: #4a148c;
+      --purple-mid: #6a1b9a;
+      --purple-soft: #9c27b0;
+      --orange: #ef6c00;
+      --ink: #1a1a2e;
+      --muted: #4a4a5a;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 1080px;
+      height: 1080px;
+      overflow: hidden;
+      background: #fff;
+      font-family: "Montserrat", Arial, sans-serif;
+      color: var(--ink);
+    }
+
+    .canvas {
+      position: relative;
+      width: 1080px;
+      height: 1080px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    /* Decorative doodles */
+    .doodle {
+      position: absolute;
+      opacity: 0.18;
+      color: var(--purple-soft);
+      pointer-events: none;
+    }
+    .doodle.cap { top: 150px; left: 420px; font-size: 42px; }
+    .doodle.glass { top: 520px; left: 470px; font-size: 36px; }
+    .doodle.id { top: 620px; left: 40px; font-size: 34px; }
+    .doodle.plane {
+      top: 180px; left: 280px; font-size: 28px;
+      transform: rotate(-18deg);
+    }
+
+    .magenta-arc {
+      position: absolute;
+      right: -180px;
+      top: 80px;
+      width: 720px;
+      height: 720px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 40%, #ff2d95 0%, #c4007a 45%, #8e24aa 100%);
+      z-index: 1;
+    }
+
+    .header {
+      position: absolute;
+      top: 36px;
+      left: 40px;
+      right: 40px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      z-index: 5;
+    }
+
+    .logo {
+      height: 56px;
+      width: auto;
+    }
+
+    .tagline {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .tagline strong { font-weight: 800; }
+
+    .hero {
+      position: absolute;
+      right: -20px;
+      top: 90px;
+      width: 520px;
+      height: 720px;
+      object-fit: cover;
+      object-position: 72% 18%;
+      z-index: 3;
+      filter: drop-shadow(0 12px 24px rgba(0,0,0,0.18));
+    }
+
+    .copy {
+      position: absolute;
+      left: 48px;
+      top: 160px;
+      width: 520px;
+      z-index: 4;
+    }
+
+    .headline {
+      font-size: 54px;
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -0.5px;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+
+    .headline .accent {
+      color: var(--magenta-bright);
+    }
+
+    .subhead {
+      display: inline-block;
+      margin-top: 22px;
+      padding: 12px 22px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--magenta-bright), var(--purple-mid));
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.3;
+      max-width: 100%;
+    }
+
+    .body {
+      margin-top: 18px;
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 1.45;
+      color: var(--muted);
+      max-width: 480px;
+    }
+
+    .benefits {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px 16px;
+      margin-top: 28px;
+      width: 480px;
+    }
+
+    .benefit {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .benefit .icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 20px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 10px rgba(74, 20, 140, 0.25);
+    }
+    .benefit .icon.a { background: linear-gradient(135deg, #7b1fa2, #c4007a); }
+    .benefit .icon.b { background: linear-gradient(135deg, #ef6c00, #d84315); }
+    .benefit .icon.c { background: linear-gradient(135deg, #6a1b9a, #4527a0); }
+    .benefit .icon.d { background: linear-gradient(135deg, #8e24aa, #ad1457); }
+
+    .benefit span {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.25;
+      color: var(--ink);
+    }
+
+    .cta-band {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 72px;
+      height: 118px;
+      background: linear-gradient(90deg, #3d0a6e 0%, #5b148c 40%, #7b1fa2 100%);
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 48px 0 48px;
+      color: #fff;
+    }
+
+    .cta-copy {
+      font-size: 26px;
+      font-weight: 700;
+      max-width: 420px;
+      line-height: 1.25;
+    }
+    .cta-copy strong { color: #ff8ad8; }
+
+    .cta-box {
+      text-align: right;
+    }
+
+    .cta-btn {
+      display: inline-block;
+      background: #fff;
+      color: var(--magenta);
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      padding: 10px 18px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .cta-url {
+      display: inline-block;
+      border: 2px solid #ff4fa3;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 16px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .footer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 72px;
+      background: #fff;
+      border-top: 1px solid #eee;
+      z-index: 7;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 24px;
+    }
+
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .chip .dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--magenta), var(--purple-mid));
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas" id="creative">
+    <div class="magenta-arc" aria-hidden="true"></div>
+
+    <div class="doodle plane" aria-hidden="true">✈</div>
+    <div class="doodle cap" aria-hidden="true">🎓</div>
+    <div class="doodle glass" aria-hidden="true">🔍</div>
+    <div class="doodle id" aria-hidden="true">🪪</div>
+
+    <header class="header">
+      <img class="logo" src="../assets/airepro/logo.svg" alt="Airepro" />
+      <p class="tagline">Your <strong>future</strong>. Our <strong>mission</strong>.</p>
+    </header>
+
+    <img class="hero" src="../assets/airepro/hero.svg" alt="" />
+
+    <section class="copy">
+      <h1 class="headline" id="headline">FIND YOUR <span class="accent" id="accent">DREAM</span> INTERNSHIP</h1>
+      <p class="subhead" id="subhead">Start Building Your Career Today with Airepro</p>
+      <p class="body" id="body">Explore verified internships and opportunities that help you learn, grow and take the next step in your career.</p>
+
+      <div class="benefits">
+        <div class="benefit"><div class="icon a">🛡</div><span>Verified Internships</span></div>
+        <div class="benefit"><div class="icon b">🏢</div><span>Opportunities Across Multiple Domains</span></div>
+        <div class="benefit"><div class="icon c">💻</div><span>Build Real-World Experience</span></div>
+        <div class="benefit"><div class="icon d">📈</div><span>Grow Your Skills &amp; Career</span></div>
+      </div>
+    </section>
+
+    <div class="cta-band">
+      <p class="cta-copy">Your future starts with <strong>one step</strong>.</p>
+      <div class="cta-box">
+        <div class="cta-btn" id="ctaLabel">Explore Internships Now</div>
+        <div class="cta-url" id="ctaUrl">airepro.in/view/internships</div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="chip"><div class="dot">👥</div>For Students &amp; Freshers</div>
+      <div class="chip"><div class="dot">🏠</div>Remote &amp; On-site Opportunities</div>
+      <div class="chip"><div class="dot">🏅</div>Opportunities That Matter</div>
+    </footer>
+  </div>
+
+  <script>
+    /**
+     * Optional query params (set by render_creative.js via page.evaluate):
+     * headline, accent, subhead, body, ctaLabel, ctaUrl
+     * Accent word in headline is wrapped in .accent when present.
+     */
+    window.__applyCreative = function (fields) {
+      const f = fields || {};
+      const accent = String(f.accent || f.accentWord || 'DREAM').trim();
+      const rawHeadline = String(f.headline || 'FIND YOUR DREAM INTERNSHIP').trim();
+      const headlineEl = document.getElementById('headline');
+      const upper = rawHeadline.toUpperCase();
+      const accentUpper = accent.toUpperCase();
+      if (accentUpper && upper.includes(accentUpper)) {
+        const idx = upper.indexOf(accentUpper);
+        const before = rawHeadline.slice(0, idx);
+        const mid = rawHeadline.slice(idx, idx + accent.length);
+        const after = rawHeadline.slice(idx + accent.length);
+        headlineEl.innerHTML = '';
+        headlineEl.appendChild(document.createTextNode(before.toUpperCase()));
+        const span = document.createElement('span');
+        span.className = 'accent';
+        span.id = 'accent';
+        span.textContent = mid.toUpperCase();
+        headlineEl.appendChild(span);
+        headlineEl.appendChild(document.createTextNode(after.toUpperCase()));
+      } else {
+        headlineEl.textContent = upper;
+      }
+      if (f.subhead) document.getElementById('subhead').textContent = f.subhead;
+      if (f.body) document.getElementById('body').textContent = f.body;
+      if (f.ctaLabel) document.getElementById('ctaLabel').textContent = f.ctaLabel;
+      if (f.ctaUrl) {
+        const u = String(f.ctaUrl).replace(/^https?:\/\//i, '');
+        document.getElementById('ctaUrl').textContent = u;
+      }
+    };
+  </script>
+</body>
+</html>

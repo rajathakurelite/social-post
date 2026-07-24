@@ -3,6 +3,7 @@
  * Import this module once at app entry so all skills see the same env.
  */
 import dotenv from 'dotenv';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -15,6 +16,34 @@ dotenv.config({ path: path.join(rootDir, '.env') });
 function req(name) {
   const v = process.env[name];
   return typeof v === 'string' ? v.trim() : '';
+}
+
+/**
+ * Load brand brief markdown from config/brand/{profile}.md
+ * @param {string} profile
+ * @returns {{ name: string, profilePath: string, briefText: string, website: string, internshipsUrl: string }}
+ */
+function loadBrand(profile) {
+  const name = (profile || 'airepro').toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'airepro';
+  const profilePath = path.join(rootDir, 'config', 'brand', `${name}.md`);
+  if (!fs.existsSync(profilePath)) {
+    throw new Error(
+      `Brand brief missing: ${profilePath}. Set BRAND_PROFILE to an existing file under config/brand/ (default: airepro).`
+    );
+  }
+  const briefText = fs.readFileSync(profilePath, 'utf8').trim();
+  if (!briefText) {
+    throw new Error(`Brand brief is empty: ${profilePath}`);
+  }
+  const internshipsUrl =
+    req('AIREPRO_INTERNSHIPS_URL') || 'https://airepro.in/view/internships';
+  return {
+    name,
+    profilePath,
+    briefText,
+    website: 'https://airepro.in/',
+    internshipsUrl,
+  };
 }
 
 /**
@@ -35,11 +64,20 @@ const ollamaTimeout = parseInt(req('OLLAMA_TIMEOUT_MS'), 10);
 const httpRetries = parseInt(req('HTTP_RETRIES'), 10);
 const dryRunEnv = req('DRY_RUN').toLowerCase();
 
+const brand = loadBrand(req('BRAND_PROFILE') || 'airepro');
+
+/** @type {'visual' | 'text'} */
+const fbModeRaw = (req('FACEBOOK_POST_MODE') || 'visual').toLowerCase();
+const facebookPostMode = fbModeRaw === 'text' ? 'text' : 'visual';
+
 export const config = {
   rootDir,
 
   /** When true, generate copy but do not call any post_* publish APIs. */
   dryRun: dryRunEnv === '1' || dryRunEnv === 'true' || dryRunEnv === 'yes',
+
+  /** Brand brief injected into Ollama prompts (BRAND_PROFILE → config/brand/{name}.md). */
+  brand,
 
   http: {
     /** Default timeout for platform / Google token fetch calls. */
@@ -59,6 +97,11 @@ export const config = {
     pageId: req('FB_PAGE_ID'),
     pageToken: req('FB_PAGE_TOKEN'),
     graphVersion: req('FB_GRAPH_VERSION') || 'v19.0',
+    /**
+     * visual (default): short caption + branded PNG via Photos API.
+     * text: classic Page feed message only.
+     */
+    postMode: facebookPostMode,
   },
 
   /**

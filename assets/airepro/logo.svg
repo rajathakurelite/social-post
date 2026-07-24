@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 64" role="img" aria-label="Airepro">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C4007A"/>
+      <stop offset="100%" stop-color="#7B1FA2"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="28" fill="url(#g)"/>
+  <path d="M22 38 V26 h4.2 l5.2 9.6L36.6 26H41v12h-3.4v-7.2L32.8 40h-2.4L25.4 30.8V38H22z" fill="#fff"/>
+  <path d="M18 22c6-6 14-6 20 0" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".9"/>
+  <path d="M44 40l3.2-3.2 1.6 1.6 4-4.2 1.8 1.7-5.8 6.1z" fill="#fff"/>
+  <text x="72" y="42" font-family="Montserrat, Poppins, Arial, sans-serif" font-size="34" font-weight="800" fill="#C4007A">Airepro</text>
+</svg>

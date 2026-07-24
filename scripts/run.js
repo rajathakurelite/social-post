@@ -7,12 +7,16 @@
  *   npm start -- "Indian history"
  *   node scripts/run.js --only=facebook,linkedin "Topic here"
  *   node scripts/run.js --dry-run "Topic here"
+ *   node scripts/run.js --dry-run --only=facebook "dream internship for students"
+ *   node scripts/run.js --text-only --only=facebook "Topic"   # FACEBOOK_POST_MODE=text for this run
  *
  * Platforms default from env PLATFORMS=facebook,twitter,linkedin,youtube,whatsapp
  * Dry-run: --dry-run and/or DRY_RUN=1 (generate only; no publish API calls)
+ * Facebook default: visual (caption + PNG via Photos API). Override with FACEBOOK_POST_MODE=text or --text-only.
  */
-import { generateMultiPlatformPack } from '../skills/generate_post.js';
-import { postToFacebook } from '../skills/post_facebook.js';
+import { generateMultiPlatformPack, generateFacebookCreative, defaultFacebookCreative } from '../skills/generate_post.js';
+import { postToFacebook, postPhotoToFacebook } from '../skills/post_facebook.js';
+import { renderCreativePng } from '../skills/render_creative.js';
 import { postToTwitter } from '../skills/post_twitter.js';
 import { postToLinkedIn } from '../skills/post_linkedin.js';
 import { postToYouTube } from '../skills/post_youtube.js';
@@ -45,11 +49,14 @@ function parseArgs(argv) {
   const topicParts = [];
   let only = null;
   let dryRun = false;
+  let textOnly = false;
   for (const a of argv) {
     if (a.startsWith('--only=')) {
       only = a.slice('--only='.length);
     } else if (a === '--dry-run' || a === '--dryrun') {
       dryRun = true;
+    } else if (a === '--text-only' || a === '--textonly') {
+      textOnly = true;
     } else {
       topicParts.push(a);
     }
@@ -63,6 +70,7 @@ function parseArgs(argv) {
           .filter(Boolean)
       : null,
     dryRun: dryRun || config.dryRun,
+    textOnly,
   };
 }
 
@@ -92,15 +100,22 @@ function preview(text, max = 160) {
 }
 
 async function main() {
-  const { topic, only, dryRun } = parseArgs(process.argv.slice(2));
+  const { topic, only, dryRun, textOnly } = parseArgs(process.argv.slice(2));
   if (!topic) {
     logger.error('Missing topic. Example: node scripts/run.js "Indian history"');
     logger.info('Optional: --only=facebook,twitter,linkedin,youtube,whatsapp');
     logger.info('Optional: --dry-run (or DRY_RUN=1) to generate without publishing');
+    logger.info('Optional: --text-only for Facebook feed text (skip creative PNG)');
     logger.info('Or: npm start -- "your topic here"');
     process.exitCode = 1;
     return;
   }
+
+  if (textOnly) {
+    config.facebook.postMode = 'text';
+  }
+
+  const facebookVisual = config.facebook.postMode === 'visual';
 
   const platforms = only?.length ? only : config.platforms;
   const allowed = new Set(['facebook', 'twitter', 'linkedin', 'youtube', 'whatsapp']);
@@ -133,31 +148,82 @@ async function main() {
 
   logger.info('Starting ai-social-agent run', {
     topic,
+    brand: config.brand.name,
     model: config.ollama.model,
     platforms: selected,
     dryRun,
+    facebookPostMode: config.facebook.postMode,
   });
 
   let pack;
   try {
-    pack = await generateMultiPlatformPack(topic);
-    logger.success('Generated multi-platform pack', {
-      facebookChars: pack.facebook.length,
-      twitterChars: pack.twitter.length,
-      linkedinChars: pack.linkedin.length,
-      whatsappChars: pack.whatsapp.length,
-    });
-    logger.info('Twitter preview', pack.twitter);
+    const facebookOnly = selected.length === 1 && selected[0] === 'facebook';
+    if (facebookOnly && facebookVisual) {
+      const creative = await generateFacebookCreative(topic);
+      pack = {
+        facebook: creative.caption,
+        twitter: '',
+        linkedin: '',
+        youtubeTitle: '',
+        youtubeDescription: '',
+        whatsapp: '',
+        facebookCreative: creative,
+      };
+      logger.success('Generated Facebook creative fields', {
+        facebookChars: pack.facebook.length,
+        headline: creative.headline,
+      });
+    } else {
+      pack = await generateMultiPlatformPack(topic);
+      logger.success('Generated multi-platform pack', {
+        facebookChars: pack.facebook.length,
+        twitterChars: pack.twitter.length,
+        linkedinChars: pack.linkedin.length,
+        whatsappChars: pack.whatsapp.length,
+        facebookVisual,
+      });
+      if (pack.twitter) logger.info('Twitter preview', pack.twitter);
+    }
   } catch (e) {
     logger.error('Generation failed', e.message || e);
     process.exitCode = 1;
     return;
   }
 
+  /** @type {string | null} */
+  let creativePath = null;
+
+  if (selected.includes('facebook') && facebookVisual) {
+    const fields = pack.facebookCreative || defaultFacebookCreative(topic);
+    try {
+      creativePath = await renderCreativePng({
+        headline: fields.headline,
+        accentWord: fields.accentWord,
+        subhead: fields.subhead,
+        body: fields.body,
+        ctaLabel: fields.ctaLabel,
+        ctaUrl: config.brand.internshipsUrl,
+      });
+    } catch (e) {
+      logger.error('Creative render failed', e.message || e);
+      process.exitCode = 1;
+      return;
+    }
+  }
+
   if (dryRun) {
     logger.info('Dry-run: skipping all publish API calls. Would post:');
     if (selected.includes('facebook')) {
-      logger.info('  facebook', { chars: pack.facebook.length, preview: preview(pack.facebook) });
+      logger.info('  facebook (full)', pack.facebook);
+      logger.info('  facebook', {
+        mode: config.facebook.postMode,
+        chars: pack.facebook.length,
+        preview: preview(pack.facebook),
+        ...(creativePath ? { creativePng: creativePath } : {}),
+      });
+      if (creativePath) {
+        logger.info('  facebook creative PNG', creativePath);
+      }
     }
     if (selected.includes('twitter')) {
       logger.info('  twitter', { chars: pack.twitter.length, preview: preview(pack.twitter, 280) });
@@ -183,7 +249,15 @@ async function main() {
   if (selected.includes('facebook')) {
     try {
       assertFacebookConfig();
-      const ok = await runPlatform('Facebook Page', () => postToFacebook(pack.facebook));
+      const ok = await runPlatform('Facebook Page', async () => {
+        if (facebookVisual) {
+          if (!creativePath) {
+            throw new Error('Visual mode requires a rendered creative PNG');
+          }
+          return postPhotoToFacebook(pack.facebook, creativePath);
+        }
+        return postToFacebook(pack.facebook);
+      });
       if (!ok) anyFailed = true;
     } catch (e) {
       logger.info(`Skipping Facebook: ${e.message}`);
