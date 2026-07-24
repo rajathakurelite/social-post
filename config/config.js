@@ -17,10 +17,38 @@ function req(name) {
   return typeof v === 'string' ? v.trim() : '';
 }
 
+/**
+ * Per-platform publish gate from .env. Unset → enabled.
+ * Disabled when value is false / 0 / no / off (case-insensitive).
+ * @param {string} envName
+ * @returns {boolean}
+ */
+function isEnabled(envName) {
+  const v = req(envName).toLowerCase();
+  if (!v) return true;
+  return !['false', '0', 'no', 'off'].includes(v);
+}
+
 const twMax = parseInt(req('TWITTER_MAX_CHARS'), 10);
+const httpTimeout = parseInt(req('HTTP_TIMEOUT_MS'), 10);
+const ollamaTimeout = parseInt(req('OLLAMA_TIMEOUT_MS'), 10);
+const httpRetries = parseInt(req('HTTP_RETRIES'), 10);
+const dryRunEnv = req('DRY_RUN').toLowerCase();
 
 export const config = {
   rootDir,
+
+  /** When true, generate copy but do not call any post_* publish APIs. */
+  dryRun: dryRunEnv === '1' || dryRunEnv === 'true' || dryRunEnv === 'yes',
+
+  http: {
+    /** Default timeout for platform / Google token fetch calls. */
+    timeoutMs: Number.isFinite(httpTimeout) && httpTimeout > 0 ? httpTimeout : 30_000,
+    /** Ollama generate can be slow; separate budget. */
+    ollamaTimeoutMs: Number.isFinite(ollamaTimeout) && ollamaTimeout > 0 ? ollamaTimeout : 120_000,
+    /** Extra attempts after the first for transient 429/5xx / network errors. */
+    retries: Number.isFinite(httpRetries) && httpRetries >= 0 ? Math.min(5, httpRetries) : 2,
+  },
 
   ollama: {
     url: req('OLLAMA_URL') || 'http://localhost:11434',
@@ -78,7 +106,28 @@ export const config = {
     .split(',')
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean),
+
+  /**
+   * Hard on/off per network from *_ENABLED env (unset = enabled).
+   * Applied after PLATFORMS / --only= selection.
+   */
+  platformEnabled: {
+    facebook: isEnabled('FACEBOOK_ENABLED'),
+    twitter: isEnabled('TWITTER_ENABLED'),
+    linkedin: isEnabled('LINKEDIN_ENABLED'),
+    youtube: isEnabled('YOUTUBE_ENABLED'),
+    whatsapp: isEnabled('WHATSAPP_ENABLED'),
+  },
 };
+
+/**
+ * Keep platforms whose *_ENABLED flag is on (or unset).
+ * @param {string[]} list
+ * @returns {string[]}
+ */
+export function filterEnabledPlatforms(list) {
+  return list.filter((p) => config.platformEnabled[p] !== false);
+}
 
 export function assertFacebookConfig() {
   const { pageId, pageToken } = config.facebook;

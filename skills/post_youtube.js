@@ -2,10 +2,10 @@
  * Skill: update an existing YouTube video's title and description (YouTube Data API v3).
  * Google does not expose "Community tab" text posts via the public Data API; this updates metadata on a video you already uploaded.
  */
-import fetch from 'node-fetch';
 import { config, assertYouTubeConfig } from '../config/config.js';
 import { logger } from '../utils/logger.js';
 import { refreshGoogleAccessToken } from '../utils/google_access_token.js';
+import { fetchWithRetry } from '../utils/http_fetch.js';
 
 /**
  * @param {{ title: string, description: string }} meta
@@ -33,9 +33,13 @@ export async function postToYouTube(meta) {
 
   logger.info('Fetching YouTube video snippet before update', { videoId });
 
-  const listRes = await fetch(listUrl.toString(), {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  const listRes = await fetchWithRetry(
+    listUrl.toString(),
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+    { timeoutMs: config.http.timeoutMs, retries: config.http.retries }
+  );
   const listText = await listRes.text();
   let listData;
   try {
@@ -65,17 +69,21 @@ export async function postToYouTube(meta) {
   const updateUrl = new URL('https://www.googleapis.com/youtube/v3/videos');
   updateUrl.searchParams.set('part', 'snippet');
 
-  const updateRes = await fetch(updateUrl.toString(), {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
+  const updateRes = await fetchWithRetry(
+    updateUrl.toString(),
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id: videoId,
+        snippet,
+      }),
     },
-    body: JSON.stringify({
-      id: videoId,
-      snippet,
-    }),
-  });
+    { timeoutMs: config.http.timeoutMs, retries: config.http.retries }
+  );
 
   const updateText = await updateRes.text();
   let updateData;

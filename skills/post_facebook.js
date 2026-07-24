@@ -2,9 +2,9 @@
  * Skill: publish a text post to a Facebook Page using the Graph API.
  * POST https://graph.facebook.com/{version}/{page_id}/feed
  */
-import fetch from 'node-fetch';
 import { config, assertFacebookConfig } from '../config/config.js';
 import { logger } from '../utils/logger.js';
+import { fetchWithRetry } from '../utils/http_fetch.js';
 
 /**
  * Publishes `message` to the configured Page feed (public by default).
@@ -34,11 +34,15 @@ export async function postToFacebook(message, options = {}) {
 
   let res;
   try {
-    res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString(),
-    });
+    res = await fetchWithRetry(
+      url,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+      },
+      { timeoutMs: config.http.timeoutMs, retries: config.http.retries }
+    );
   } catch (e) {
     throw new Error(`Facebook request failed: ${e.message}`);
   }

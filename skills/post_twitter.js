@@ -2,10 +2,10 @@
  * Skill: publish a post on X (Twitter) using API v2.
  * Supports OAuth 2.0 user access token (Bearer) OR OAuth 1.0a user context (HMAC-SHA1).
  */
-import fetch from 'node-fetch';
 import { config, assertTwitterConfig } from '../config/config.js';
 import { logger } from '../utils/logger.js';
 import { buildTwitterAuthorizationHeader } from '../utils/twitter_oauth1.js';
+import { fetchWithRetry } from '../utils/http_fetch.js';
 
 const TWITTER_POST_URL = 'https://api.twitter.com/2/tweets';
 
@@ -48,11 +48,15 @@ export async function postToTwitter(text) {
 
   let res;
   try {
-    res = await fetch(TWITTER_POST_URL, {
-      method: 'POST',
-      headers,
-      body: jsonBody,
-    });
+    res = await fetchWithRetry(
+      TWITTER_POST_URL,
+      {
+        method: 'POST',
+        headers,
+        body: jsonBody,
+      },
+      { timeoutMs: config.http.timeoutMs, retries: config.http.retries }
+    );
   } catch (e) {
     throw new Error(`Twitter request failed: ${e.message}`);
   }

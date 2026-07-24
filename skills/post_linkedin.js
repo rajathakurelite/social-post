@@ -3,9 +3,9 @@
  * Requires: w_member_social (person) or w_organization_social (org) on the access token.
  * Docs: https://learn.microsoft.com/en-us/linkedin/marketing/integrations/community-management/shares/posts-api
  */
-import fetch from 'node-fetch';
 import { config, assertLinkedInConfig } from '../config/config.js';
 import { logger } from '../utils/logger.js';
+import { fetchWithRetry } from '../utils/http_fetch.js';
 
 /**
  * @param {string} commentary — main post text
@@ -39,16 +39,20 @@ export async function postToLinkedIn(commentary) {
 
   let res;
   try {
-    res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        'LinkedIn-Version': restVersion,
-        'X-Restli-Protocol-Version': '2.0.0',
+    res = await fetchWithRetry(
+      url,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'LinkedIn-Version': restVersion,
+          'X-Restli-Protocol-Version': '2.0.0',
+        },
+        body: JSON.stringify(body),
       },
-      body: JSON.stringify(body),
-    });
+      { timeoutMs: config.http.timeoutMs, retries: config.http.retries }
+    );
   } catch (e) {
     throw new Error(`LinkedIn request failed: ${e.message}`);
   }

@@ -3,9 +3,9 @@
  * Sends to one or more opted-in recipients (WHATSAPP_TO). Outside the 24h customer-care window,
  * Meta requires template messages instead of free-form text — see README.
  */
-import fetch from 'node-fetch';
 import { config, assertWhatsAppConfig } from '../config/config.js';
 import { logger } from '../utils/logger.js';
+import { fetchWithRetry } from '../utils/http_fetch.js';
 
 /** WhatsApp text body max length (Cloud API). */
 const MAX_BODY = 4096;
@@ -48,23 +48,27 @@ export async function postToWhatsApp(message) {
 
     let res;
     try {
-      res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          recipient_type: 'individual',
-          to,
-          type: 'text',
-          text: {
-            preview_url: true,
-            body: text,
+      res = await fetchWithRetry(
+        url,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
           },
-        }),
-      });
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to,
+            type: 'text',
+            text: {
+              preview_url: true,
+              body: text,
+            },
+          }),
+        },
+        { timeoutMs: config.http.timeoutMs, retries: config.http.retries }
+      );
     } catch (e) {
       throw new Error(`WhatsApp request failed: ${e.message}`);
     }

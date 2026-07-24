@@ -16,8 +16,9 @@ Production-oriented Node.js automation that uses **Ollama** (Gemma) to draft soc
 8. [Plugin: YouTube](#plugin-youtube)
 9. [Plugin: WhatsApp Business](#plugin-whatsapp-business)
 10. [Running, platforms, and troubleshooting](#running-platforms-and-troubleshooting)
-11. [Project layout](#project-layout)
-12. [Security](#security)
+11. [Platform guides (`docs/`)](#platform-guides-docs)
+12. [Project layout](#project-layout)
+13. [Security](#security)
 
 ---
 
@@ -29,12 +30,14 @@ npm install
 cp .env.example .env   # Windows: copy .env.example .env
 ```
 
-Fill `.env` using the sections below. Set **`PLATFORMS`** to only the networks you have configured (others are skipped automatically).
+Fill `.env` using the sections below. Set **`PLATFORMS`** to only the networks you have configured. Use **`*_ENABLED=false`** as a hard off-switch (see [docs/](./docs/README.md)).
 
 ```bash
 node scripts/run.js "Your topic"
 npm start -- "Your topic"
 node scripts/run.js --only=facebook,whatsapp "Your topic"
+node scripts/run.js --dry-run "Your topic"   # generate only; no publish
+# or: DRY_RUN=1 node scripts/run.js "Your topic"
 ```
 
 ---
@@ -105,7 +108,7 @@ WhatsApp:
 | **LinkedIn** | `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_AUTHOR_URN` | `LINKEDIN_VERSION` |
 | **YouTube** | `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN`, `YOUTUBE_VIDEO_ID` | — |
 | **WhatsApp** | `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TO` | `WHATSAPP_GRAPH_VERSION` |
-| **Runner** | — | `PLATFORMS` (comma list) |
+| **Runner** | — | `PLATFORMS`, `FACEBOOK_ENABLED` / `TWITTER_ENABLED` / `LINKEDIN_ENABLED` / `YOUTUBE_ENABLED` / `WHATSAPP_ENABLED`, `DRY_RUN`, `HTTP_TIMEOUT_MS`, `OLLAMA_TIMEOUT_MS`, `HTTP_RETRIES` |
 
 ---
 
@@ -285,6 +288,11 @@ Default **`v21.0`**. Align with Meta’s current Graph version if your app is pi
 ## Running, platforms, and troubleshooting
 
 - **`PLATFORMS`** — comma list: `facebook,twitter,linkedin,youtube,whatsapp`. Missing credentials → **skip** with log; API failure → **exit code 1** for that run.
+- **`*_ENABLED`** — hard on/off after selection (`FACEBOOK_ENABLED`, etc.). Unset = enabled; `false` / `0` / `no` / `off` disables. `--only=` still respects these flags (log: `Skipping facebook: FACEBOOK_ENABLED=false`).
+- **Dry-run** — `--dry-run` or `DRY_RUN=1` still calls Ollama and logs previews, but **never** calls platform publish APIs (safe for copy review).
+- **Timeouts / retries** — outbound `fetch` uses timeouts (`HTTP_TIMEOUT_MS`, `OLLAMA_TIMEOUT_MS`) and bounded retries for transient **429/5xx** only (not 401/403). Respects `Retry-After` when present.
+- **Ollama** — before generate, the runner checks `/api/tags`; unreachable host or missing `MODEL` fails with an actionable message (`ollama serve` / `ollama pull`).
+- **Exit codes** — generation fail → exit **1**; missing creds → skip; all selected networks disabled via `*_ENABLED` → exit **0**; any publish API fail → exit **1**; dry-run success → exit **0**.
 - **Preview** — logs show a short preview for Twitter; check full text in Ollama output during debugging.
 - **Facebook “permission” errors** — re-check Page token and that the token includes `pages_manage_posts` for that Page.
 - **LinkedIn 4xx** — wrong `LINKEDIN_AUTHOR_URN` vs token type (person vs org), or missing product approval.
@@ -293,12 +301,25 @@ Default **`v21.0`**. Align with Meta’s current Graph version if your app is pi
 
 ---
 
+## Platform guides (`docs/`)
+
+Short per-network guides (skill behavior, env vars, enable flags, dry-run/live verify, common errors):
+
+- [docs/README.md](./docs/README.md) — index + how `PLATFORMS` and `*_ENABLED` interact
+- [Facebook](./docs/facebook.md) · [Twitter / X](./docs/twitter.md) · [LinkedIn](./docs/linkedin.md) · [YouTube](./docs/youtube.md) · [WhatsApp](./docs/whatsapp.md) · [Ollama](./docs/ollama.md)
+
+Credential collection detail remains in the Plugin sections above; use `docs/` for day-to-day operator toggles and smoke commands.
+
+---
+
 ## Project layout
 
 | Path | Role |
 |------|------|
+| `docs/` | Per-platform operator guides + enable-flag rules |
 | `config/config.js` | Env loading, platform toggles, assertion helpers |
-| `utils/logger.js` | `info`, `error`, `success` |
+| `utils/logger.js` | `info`, `error`, `success` (secret-key redaction) |
+| `utils/http_fetch.js` | Shared fetch timeout + retry helper |
 | `utils/twitter_oauth1.js` | OAuth 1.0a signing for X |
 | `utils/google_access_token.js` | Google refresh-token → access token |
 | `skills/generate_post.js` | Ollama `/api/generate`, multi-platform parsing |

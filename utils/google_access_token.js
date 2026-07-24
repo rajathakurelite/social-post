@@ -1,7 +1,8 @@
 /**
  * Refresh a short-lived Google OAuth access token for YouTube Data API calls.
  */
-import fetch from 'node-fetch';
+import { config } from '../config/config.js';
+import { fetchWithRetry } from './http_fetch.js';
 
 /**
  * @param {{ clientId: string, clientSecret: string, refreshToken: string }} creds
@@ -20,11 +21,15 @@ export async function refreshGoogleAccessToken(creds) {
     grant_type: 'refresh_token',
   });
 
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: body.toString(),
-  });
+  const res = await fetchWithRetry(
+    'https://oauth2.googleapis.com/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    },
+    { timeoutMs: config.http.timeoutMs, retries: config.http.retries }
+  );
 
   const text = await res.text();
   let data;

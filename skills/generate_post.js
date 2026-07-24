@@ -3,9 +3,9 @@
  * - Single-platform: generatePost(topic, { platform })
  * - Multi-platform pack: one /api/generate call with section markers, parsed for FB / X / LinkedIn / YouTube.
  */
-import fetch from 'node-fetch';
 import { config } from '../config/config.js';
 import { logger } from '../utils/logger.js';
+import { fetchWithRetry, fetchWithTimeout } from '../utils/http_fetch.js';
 
 /** @typedef {'facebook' | 'twitter' | 'linkedin' | 'youtube' | 'whatsapp'} Platform */
 
@@ -121,34 +121,79 @@ function fallbackPack(topic, singleFacebook) {
   };
 }
 
+function ollamaBaseUrl() {
+  return config.ollama.url.replace(/\/$/, '');
+}
+
 /**
- * @returns {Promise<{ facebook: string, twitter: string, linkedin: string, youtubeTitle: string, youtubeDescription: string, whatsapp: string }>}
+ * Fail fast with actionable guidance if Ollama is down or MODEL is not pulled.
+ * @returns {Promise<void>}
  */
-export async function generateMultiPlatformPack(topic) {
-  if (!topic || !String(topic).trim()) {
-    throw new Error('Topic is required for generateMultiPlatformPack()');
-  }
-
-  const base = config.ollama.url.replace(/\/$/, '');
-  const url = `${base}/api/generate`;
-
-  const body = {
-    model: config.ollama.model,
-    prompt: buildMultiPlatformPrompt(topic.trim()),
-    stream: false,
-  };
-
-  logger.info('Calling Ollama /api/generate (multi-platform)', { model: body.model });
+export async function assertOllamaReady() {
+  const base = ollamaBaseUrl();
+  const model = config.ollama.model;
+  const tagsUrl = `${base}/api/tags`;
 
   let res;
   try {
-    res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    res = await fetchWithTimeout(tagsUrl, { method: 'GET' }, Math.min(config.http.timeoutMs, 15_000));
   } catch (e) {
-    throw new Error(`Ollama request failed (is Ollama running at ${base}?): ${e.message}`);
+    throw new Error(
+      `Ollama unreachable at ${base}. Start it (e.g. \`ollama serve\`), confirm OLLAMA_URL, and retry. (${e.message})`
+    );
+  }
+
+  const text = await res.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(
+      `Ollama /api/tags returned non-JSON (${res.status}) from ${base}. Check OLLAMA_URL.`
+    );
+  }
+
+  if (!res.ok) {
+    throw new Error(
+      `Ollama /api/tags failed (${res.status}) at ${base}: ${data?.error || text.slice(0, 200)}`
+    );
+  }
+
+  const names = (Array.isArray(data.models) ? data.models : [])
+    .map((m) => (typeof m?.name === 'string' ? m.name : typeof m?.model === 'string' ? m.model : ''))
+    .filter(Boolean);
+
+  const hasModel =
+    names.includes(model) ||
+    names.some((n) => n === `${model}:latest` || n.startsWith(`${model}:`));
+
+  if (!hasModel) {
+    const preview = names.length ? names.slice(0, 12).join(', ') : '(none — run ollama pull)';
+    throw new Error(
+      `Ollama model "${model}" not found at ${base}. Run \`ollama pull ${model}\` then retry. Available: ${preview}`
+    );
+  }
+}
+
+/**
+ * @param {string} url
+ * @param {object} body
+ * @returns {Promise<{ ok: boolean, status: number, data: any, text: string }>}
+ */
+async function ollamaGenerate(url, body) {
+  let res;
+  try {
+    res = await fetchWithRetry(
+      url,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      },
+      { timeoutMs: config.http.ollamaTimeoutMs, retries: config.http.retries }
+    );
+  } catch (e) {
+    throw new Error(`Ollama request failed (is Ollama running at ${ollamaBaseUrl()}?): ${e.message}`);
   }
 
   const text = await res.text();
@@ -159,8 +204,40 @@ export async function generateMultiPlatformPack(topic) {
     throw new Error(`Ollama returned non-JSON (${res.status}): ${text.slice(0, 500)}`);
   }
 
-  if (!res.ok) {
-    throw new Error(`Ollama error ${res.status}: ${data?.error || text}`);
+  return { ok: res.ok, status: res.status, data, text };
+}
+
+/**
+ * @returns {Promise<{ facebook: string, twitter: string, linkedin: string, youtubeTitle: string, youtubeDescription: string, whatsapp: string }>}
+ */
+export async function generateMultiPlatformPack(topic) {
+  if (!topic || !String(topic).trim()) {
+    throw new Error('Topic is required for generateMultiPlatformPack()');
+  }
+
+  await assertOllamaReady();
+
+  const base = ollamaBaseUrl();
+  const url = `${base}/api/generate`;
+
+  const body = {
+    model: config.ollama.model,
+    prompt: buildMultiPlatformPrompt(topic.trim()),
+    stream: false,
+  };
+
+  logger.info('Calling Ollama /api/generate (multi-platform)', { model: body.model });
+
+  const { ok, status, data, text } = await ollamaGenerate(url, body);
+
+  if (!ok) {
+    const errMsg = data?.error || text;
+    if (/not found|unknown model|pull/i.test(String(errMsg))) {
+      throw new Error(
+        `Ollama model error ${status}: ${errMsg}. Run \`ollama pull ${config.ollama.model}\`.`
+      );
+    }
+    throw new Error(`Ollama error ${status}: ${errMsg}`);
   }
 
   const raw = typeof data.response === 'string' ? data.response : '';
@@ -223,7 +300,7 @@ export async function generatePost(topic, options = {}) {
     throw new Error('Topic is required for generatePost()');
   }
 
-  const base = config.ollama.url.replace(/\/$/, '');
+  const base = ollamaBaseUrl();
   const url = `${base}/api/generate`;
 
   const body = {
@@ -234,27 +311,10 @@ export async function generatePost(topic, options = {}) {
 
   logger.info('Calling Ollama /api/generate', { model: body.model, platform });
 
-  let res;
-  try {
-    res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-  } catch (e) {
-    throw new Error(`Ollama request failed (is Ollama running at ${base}?): ${e.message}`);
-  }
+  const { ok, status, data, text } = await ollamaGenerate(url, body);
 
-  const text = await res.text();
-  let data;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    throw new Error(`Ollama returned non-JSON (${res.status}): ${text.slice(0, 500)}`);
-  }
-
-  if (!res.ok) {
-    throw new Error(`Ollama error ${res.status}: ${data?.error || text}`);
+  if (!ok) {
+    throw new Error(`Ollama error ${status}: ${data?.error || text}`);
   }
 
   let raw = typeof data.response === 'string' ? data.response : '';
