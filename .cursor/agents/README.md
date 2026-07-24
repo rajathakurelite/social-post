@@ -10,8 +10,8 @@ Project-scoped specialists for this repo. Cursor delegates to them by `name` / `
 | [`linkedin-publisher`](./linkedin-publisher.md) | LinkedIn REST posts + author URNs |
 | [`youtube-publisher`](./youtube-publisher.md) | YouTube Data API title/description updates |
 | [`whatsapp-publisher`](./whatsapp-publisher.md) | WhatsApp Cloud API + opt-in/compliance |
-| [`credentials-ops`](./credentials-ops.md) | `.env`, vault handoff, assert helpers |
-| [`runner-orchestrator`](./runner-orchestrator.md) | `scripts/run.js`, `PLATFORMS`, CLI flags |
+| [`credentials-ops`](./credentials-ops.md) | `.env`, vault handoff, assert helpers, `*_ENABLED` |
+| [`runner-orchestrator`](./runner-orchestrator.md) | `scripts/run.js`, `PLATFORMS`, `*_ENABLED`, CLI flags |
 | [`production-hardening`](./production-hardening.md) | Retries, dry-run, secrets, logging, CI |
 | [`social-debugger`](./social-debugger.md) | API 4xx/5xx, skip vs fail, token expiry |
 | [`verify-functionality`](./verify-functionality.md) | Smoke / dry-run / regression; verify all functionality before release |
@@ -33,7 +33,7 @@ skills/generate_post.js   → content-generator, verify-functionality
 skills/post_*.js          → *-publisher agents, verify-functionality
 utils/*                   → twitter-publisher, youtube-publisher, production-hardening, verify-functionality
 scripts/run.js            → runner-orchestrator, social-debugger, verify-functionality
-README.md / .env.example  → credentials-ops
+README.md / .env.example / docs/ → credentials-ops, runner-orchestrator
 ```
 
 ## Rules for all agents
