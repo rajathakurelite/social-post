@@ -1,0 +1,10 @@
+{
+  "bannedWords": [
+    "guaranteed placement",
+    "100% job",
+    "get rich",
+    "no experience needed!!!",
+    "lottery"
+  ],
+  "handleAllowlist": ["@airepro"]
+}

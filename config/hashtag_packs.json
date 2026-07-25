@@ -1,0 +1,48 @@
+{
+  "packs": [
+    {
+      "id": "internships",
+      "name": "Internships",
+      "tags": [
+        "#internship",
+        "#internships",
+        "#students",
+        "#freshers",
+        "#hiringnow",
+        "#careers",
+        "#collegestudents",
+        "#internshipopportunity"
+      ],
+      "perPlatformMax": { "twitter": 3, "linkedin": 5 }
+    },
+    {
+      "id": "freelance",
+      "name": "Freelance",
+      "tags": [
+        "#freelance",
+        "#freelancer",
+        "#remotework",
+        "#workfromhome",
+        "#sidehustle",
+        "#gigeconomy",
+        "#freelancejobs"
+      ],
+      "perPlatformMax": { "twitter": 3, "linkedin": 5 }
+    },
+    {
+      "id": "career",
+      "name": "Career growth",
+      "tags": [
+        "#careers",
+        "#careergrowth",
+        "#skilldevelopment",
+        "#jobsearch",
+        "#upskilling",
+        "#careeradvice",
+        "#futureofwork",
+        "#learning"
+      ],
+      "perPlatformMax": { "twitter": 3, "linkedin": 5 }
+    }
+  ]
+}

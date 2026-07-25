@@ -14,7 +14,11 @@
  * Dry-run: --dry-run and/or DRY_RUN=1 (generate only; no publish API calls)
  * Facebook default: visual (caption + PNG via Photos API). Override with FACEBOOK_POST_MODE=text or --text-only.
  */
-import { generateMultiPlatformPack, generateFacebookCreative, defaultFacebookCreative } from '../skills/generate_post.js';
+import {
+  generateMultiPlatformPack,
+  generateFacebookCreative,
+  defaultFacebookCreative,
+} from '../skills/generate_post.js';
 import { postToFacebook, postPhotoToFacebook } from '../skills/post_facebook.js';
 import { renderCreativePng } from '../skills/render_creative.js';
 import { postToTwitter } from '../skills/post_twitter.js';
@@ -94,7 +98,9 @@ async function runPlatform(name, fn) {
  * @param {number} max
  */
 function preview(text, max = 160) {
-  const s = String(text || '').replace(/\s+/g, ' ').trim();
+  const s = String(text || '')
+    .replace(/\s+/g, ' ')
+    .trim();
   if (s.length <= max) return s;
   return `${s.slice(0, max - 1)}…`;
 }
@@ -142,7 +148,9 @@ async function main() {
   const selected = filterEnabledPlatforms(candidates);
 
   if (!selected.length) {
-    logger.info('No platforms enabled for this run (all selected networks disabled via *_ENABLED).');
+    logger.info(
+      'No platforms enabled for this run (all selected networks disabled via *_ENABLED).'
+    );
     return;
   }
 
@@ -266,7 +274,9 @@ async function main() {
 
   if (selected.includes('twitter')) {
     if (!hasTwitterConfig()) {
-      logger.info('Skipping Twitter: no OAuth credentials (TWITTER_OAUTH2_ACCESS_TOKEN or OAuth 1.0a quartet).');
+      logger.info(
+        'Skipping Twitter: no OAuth credentials (TWITTER_OAUTH2_ACCESS_TOKEN or OAuth 1.0a quartet).'
+      );
     } else {
       try {
         assertTwitterConfig();

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "allowJs": true,
+    "noEmit": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "skipLibCheck": true,
+    "maxNodeModuleJsDepth": 0,
+    "strict": false,
+    "noImplicitAny": false,
+    "types": ["node"]
+  },
+  "include": ["skills/**/*.js", "server/**/*.js"],
+  "exclude": ["node_modules", "web", "coverage", "output", "skills/render_creative.js"]
+}

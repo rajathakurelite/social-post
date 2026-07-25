@@ -1,0 +1,42 @@
+{
+  "messages": [
+    {
+      "from": "15551230001",
+      "platform": "whatsapp",
+      "text": "hello internship program",
+      "messageId": "sim-001"
+    },
+    {
+      "from": "15551230002",
+      "platform": "whatsapp",
+      "text": "what are your hours?",
+      "messageId": "sim-002"
+    },
+    {
+      "from": "15551230003",
+      "platform": "whatsapp",
+      "text": "random unrelated message",
+      "messageId": "sim-003"
+    },
+    {
+      "from": "15551230001",
+      "platform": "whatsapp",
+      "text": "hello internship program",
+      "messageId": "sim-001"
+    },
+    {
+      "from": "15551230004",
+      "platform": "whatsapp",
+      "type": "image",
+      "text": "",
+      "messageId": "sim-004"
+    },
+    {
+      "from": "15551230005",
+      "platform": "whatsapp",
+      "isGroup": true,
+      "text": "hello internship in the group",
+      "messageId": "sim-005"
+    }
+  ]
+}

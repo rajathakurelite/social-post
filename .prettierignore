@@ -1,0 +1,7 @@
+node_modules/
+web/dist/
+output/
+coverage/
+package-lock.json
+.cursor/
+*.md

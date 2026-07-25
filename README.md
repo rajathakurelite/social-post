@@ -8,18 +8,19 @@ Production-oriented Node.js automation that uses **Ollama** (Gemma) to draft soc
 
 1. [Quick setup & run](#quick-setup--run)
 2. [Local operator UI](#local-operator-ui)
-3. [Team workflow — how members collect credentials](#team-workflow--how-members-collect-credentials)
-4. [Environment variables quick reference](#environment-variables-quick-reference)
-5. [Plugin: Ollama (AI generation)](#plugin-ollama-ai-generation)
-6. [Plugin: Facebook Page](#plugin-facebook-page)
-7. [Plugin: Twitter / X](#plugin-twitter--x)
-8. [Plugin: LinkedIn](#plugin-linkedin)
-9. [Plugin: YouTube](#plugin-youtube)
-10. [Plugin: WhatsApp Business](#plugin-whatsapp-business)
-11. [Running, platforms, and troubleshooting](#running-platforms-and-troubleshooting)
-12. [Platform guides (`docs/`)](#platform-guides-docs)
-13. [Project layout](#project-layout)
-14. [Security](#security)
+3. [Auto-reply (regex)](#auto-reply-regex)
+4. [Team workflow — how members collect credentials](#team-workflow--how-members-collect-credentials)
+5. [Environment variables quick reference](#environment-variables-quick-reference)
+6. [Plugin: Ollama (AI generation)](#plugin-ollama-ai-generation)
+7. [Plugin: Facebook Page](#plugin-facebook-page)
+8. [Plugin: Twitter / X](#plugin-twitter--x)
+9. [Plugin: LinkedIn](#plugin-linkedin)
+10. [Plugin: YouTube](#plugin-youtube)
+11. [Plugin: WhatsApp Business](#plugin-whatsapp-business)
+12. [Running, platforms, and troubleshooting](#running-platforms-and-troubleshooting)
+13. [Platform guides (`docs/`)](#platform-guides-docs)
+14. [Project layout](#project-layout)
+15. [Security](#security)
 
 ---
 
@@ -75,6 +76,37 @@ Open **http://127.0.0.1:5173**. Flow: enter topic → optional image upload → 
 | `GET /api/creatives/:filename` | Serve rendered PNG under `output/creatives/` |
 
 Optional env: `UI_API_HOST` (default `127.0.0.1`), `UI_API_PORT` (default `8787`). Uploads land in `output/uploads/` (gitignored).
+
+**How to use:** Dry-run stays on by default. Images are Facebook-only. Cancel polish with Esc. Smoke UI dry-run: `npm run smoke:ui` (API + Ollama required).
+
+---
+
+## Auto-reply (regex)
+
+Inbound WhatsApp matching with optional auto-send. Rules live in `config/auto_reply_rules.json`. **Nothing is sent** unless `AUTO_REPLY_ENABLED=true` and the rule is enabled. Operator UI → **Auto-reply** tab for edit/test/import/export.
+
+```bash
+npm run smoke:auto-reply   # offline match tests (no network)
+npm run verify:all         # lint → test → both smokes → build:web → bundle-size
+```
+
+Set `WHATSAPP_VERIFY_TOKEN` for Meta webhook verification on `GET /api/webhooks/whatsapp` and `WHATSAPP_APP_SECRET` to enforce `X-Hub-Signature-256` on webhook POSTs. Full guide: [docs/auto-reply.md](./docs/auto-reply.md).
+
+---
+
+## Testing & quality
+
+```bash
+npm test                 # Vitest unit + API tests (offline; Ollama + platform APIs mocked)
+npm run test:watch       # watch mode
+npm run test:coverage    # v8 coverage report
+npm run lint             # ESLint (flat config)
+npm run format           # Prettier write
+npm run smoke:auto-reply # offline auto-reply smoke
+npm run smoke:simulate   # replay config/sample_inbox.json through the engine (dry-run)
+```
+
+CI (`.github/workflows/ci.yml`) runs install → lint → tests → offline smoke → web build on pushes/PRs to `main`. Tests never hit live APIs: credentials are faked, Ollama is pointed at an unreachable port, and auto-reply data files are redirected to a temp directory.
 
 ---
 
@@ -143,7 +175,8 @@ WhatsApp:
 | **Twitter** | OAuth2: `TWITTER_OAUTH2_ACCESS_TOKEN` **or** OAuth1: `TWITTER_API_KEY`, `TWITTER_API_SECRET`, `TWITTER_ACCESS_TOKEN`, `TWITTER_ACCESS_TOKEN_SECRET` | `TWITTER_MAX_CHARS` |
 | **LinkedIn** | `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_AUTHOR_URN` | `LINKEDIN_VERSION` |
 | **YouTube** | `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN`, `YOUTUBE_VIDEO_ID` | — |
-| **WhatsApp** | `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TO` | `WHATSAPP_GRAPH_VERSION` |
+| **WhatsApp** | `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TO` | `WHATSAPP_GRAPH_VERSION`, `WHATSAPP_VERIFY_TOKEN` |
+| **Auto-reply** | — | `AUTO_REPLY_ENABLED` (default off), `WHATSAPP_VERIFY_TOKEN` |
 | **Runner** | — | `PLATFORMS`, `FACEBOOK_ENABLED` / `TWITTER_ENABLED` / `LINKEDIN_ENABLED` / `YOUTUBE_ENABLED` / `WHATSAPP_ENABLED`, `DRY_RUN`, `BRAND_PROFILE`, `HTTP_TIMEOUT_MS`, `OLLAMA_TIMEOUT_MS`, `HTTP_RETRIES` |
 
 ---
@@ -380,9 +413,15 @@ Credential collection detail remains in the Plugin sections above; use `docs/` f
 | `skills/post_linkedin.js` | LinkedIn `rest/posts` |
 | `skills/post_youtube.js` | `videos.list` + `videos.update` |
 | `skills/post_whatsapp.js` | WhatsApp Cloud API text messages |
+| `skills/auto_reply.js` | Regex auto-reply engine (match, cooldown, log) |
+| `config/auto_reply_rules.json` | Auto-reply rules |
 | `scripts/run.js` | CLI orchestration |
-| `server/index.js` | Local operator Express API (`/api/health`, `/api/upload`, `/api/polish`, `/api/publish`) |
-| `web/` | Vite + React compose UI (Airepro operator + optional image dropzone) |
+| `scripts/smoke-auto-reply.js` | Offline auto-reply smoke |
+| `scripts/smoke-ui-dryrun.js` | UI dry-run smoke (`npm run smoke:ui`) |
+| `scripts/simulate-inbox.js` | Chaos simulator — replay sample inbox (dry-run) |
+| `tests/` | Vitest unit + API suites (offline, mocked fetch) |
+| `server/index.js` | Local operator API + auto-reply + WhatsApp webhooks |
+| `web/` | Vite + React compose + Auto-reply tab |
 
 ---
 

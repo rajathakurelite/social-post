@@ -1,0 +1,26 @@
+[
+  {
+    "id": "internship-hello",
+    "name": "Internship hello",
+    "enabled": true,
+    "platform": "whatsapp",
+    "pattern": "hello\\s+(internship)(\\s+(.+))?",
+    "flags": "i",
+    "reply": "Hi! Thanks for asking about $1$2. Apply at https://airepro.in/view/internships",
+    "cooldownSec": 120,
+    "scope": "any",
+    "priority": 10
+  },
+  {
+    "id": "hours-faq",
+    "name": "Business hours",
+    "enabled": false,
+    "platform": "whatsapp",
+    "pattern": "\\b(hours|timing|open)\\b",
+    "flags": "i",
+    "reply": "We typically reply during business hours (IST). Leave your question and we will follow up.",
+    "cooldownSec": 300,
+    "scope": "dm",
+    "priority": 5
+  }
+]

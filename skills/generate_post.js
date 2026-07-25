@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Skill: generate social copy via Ollama (Gemma).
  * - Single-platform: generatePost(topic, { platform })
@@ -12,6 +13,7 @@ import { execFile } from 'child_process';
 import { config } from '../config/config.js';
 import { logger } from '../utils/logger.js';
 import { fetchWithTimeout } from '../utils/http_fetch.js';
+import { languageDirective, lengthPresetTargets } from './compose_tools.js';
 
 /** @typedef {'facebook' | 'twitter' | 'linkedin' | 'youtube' | 'whatsapp'} Platform */
 
@@ -27,17 +29,40 @@ import { fetchWithTimeout } from '../utils/http_fetch.js';
  */
 
 /**
+ * Feature 114: brand voice control — maps the compose tone to a prompt directive.
+ * @param {string} [tone] 'formal' | 'neutral' | 'playful'
+ * @returns {string} directive line ('' for neutral/unknown)
+ */
+export function toneDirective(tone) {
+  const t = String(tone || '').toLowerCase();
+  if (t === 'formal') {
+    return 'Tone directive: formal and professional — precise language, no slang, at most one emoji per post.';
+  }
+  if (t === 'playful') {
+    return 'Tone directive: playful and upbeat — conversational, energetic, light humor and tasteful emojis welcome.';
+  }
+  return '';
+}
+
+/**
  * Shared brand + topic-angle block prepended to every prompt.
  * @param {string} topic
+ * @param {{ tone?: string, language?: string, length?: string }} [opts]
  */
-function brandContextBlock(topic) {
+export function brandContextBlock(topic, opts = {}) {
   const b = config.brand;
+  const tone = toneDirective(opts.tone);
+  const lang = languageDirective(opts.language);
+  const lengths = lengthPresetTargets(opts.length);
   return `BRAND CONTEXT (follow strictly):
 ${b.briefText}
 
 Website / primary CTA: ${b.website}
 Internships CTA: ${b.internshipsUrl}
 Brand name: ${b.name}
+${tone ? `\n${tone}\n` : ''}
+${lang}
+Length targets: LinkedIn ${lengths.linkedin}; Facebook ${lengths.facebook}; X ${lengths.twitter}.
 
 The CLI topic below is an ANGLE within this brand — write copy for ${b.name}, not a generic post about an unrelated subject.
 
@@ -53,7 +78,7 @@ function isFacebookVisualMode() {
  * @param {string} topic
  * @returns {FacebookCreativeFields}
  */
-export function defaultFacebookCreative(topic) {
+export function defaultFacebookCreative(_topic) {
   const site = config.brand.website.replace(/\/$/, '');
   return {
     caption: [
@@ -72,9 +97,10 @@ export function defaultFacebookCreative(topic) {
 /**
  * @param {string} topic
  * @param {Platform} platform
+ * @param {{ tone?: string }} [opts]
  */
-function buildPromptForPlatform(topic, platform) {
-  const brand = brandContextBlock(topic);
+export function buildPromptForPlatform(topic, platform, opts = {}) {
+  const brand = brandContextBlock(topic, opts);
   const brandName = config.brand.name;
   const site = config.brand.website;
   const outputOnly = `Output ONLY the post text. No JSON, no markdown fences, no preamble.`;
@@ -167,9 +193,11 @@ ${outputOnly}`;
 
 /**
  * One Ollama call → multiple sections delimited by markers (saves latency vs 4 calls).
+ * @param {string} topic
+ * @param {{ tone?: string, language?: string, length?: string }} [opts]
  */
-function buildMultiPlatformPrompt(topic) {
-  const brand = brandContextBlock(topic);
+export function buildMultiPlatformPrompt(topic, opts = {}) {
+  const brand = brandContextBlock(topic, opts);
   const brandName = config.brand.name;
   const site = config.brand.website;
   const siteBare = site.replace(/\/$/, '');
@@ -213,6 +241,9 @@ ${facebookBlock}
 ===LINKEDIN===
 [Professional LinkedIn post: 2–4 short paragraphs, optional light emoji, end with question or CTA including ${site}. About 150–350 words. Name ${brandName}.]
 
+===LINKEDIN_COMMENT===
+[Suggested FIRST COMMENT to post under the LinkedIn post: 1–2 sentences adding a resource or question, include ${site}. This is copy-only and never auto-posted.]
+
 ===YOUTUBE_TITLE===
 [One line, max 100 characters, compelling click-worthy title for ${brandName} angle]
 
@@ -227,6 +258,7 @@ const KNOWN_SECTION_KEYS = [
   'facebook',
   'twitter',
   'linkedin',
+  'linkedin_comment',
   'youtube_title',
   'youtube_description',
   'whatsapp',
@@ -360,6 +392,77 @@ export function parseMultiPlatformOutput(raw) {
 }
 
 /**
+ * Feature 158: which pack fields fell back to defaults (missing markers).
+ * @param {Record<string, string>} sections
+ * @param {{ visual?: boolean }} [opts]
+ * @returns {string[]} platform/field keys that were defaulted
+ */
+export function reportParseFallbacks(sections, opts = {}) {
+  const s = sections || {};
+  /** @type {string[]} */
+  const defaulted = [];
+  if (opts.visual !== false) {
+    if (!String(s.fb_headline || '').trim()) defaulted.push('facebook');
+  } else if (!String(s.facebook || '').trim()) {
+    defaulted.push('facebook');
+  }
+  if (!String(s.twitter || s.x || '').trim()) defaulted.push('twitter');
+  if (!String(s.linkedin || '').trim()) defaulted.push('linkedin');
+  if (!String(s.youtube_title || s.youtube || '').trim()) defaulted.push('youtube');
+  if (!String(s.whatsapp || '').trim()) defaulted.push('whatsapp');
+  return defaulted;
+}
+
+/**
+ * Feature 249: canned multi-platform pack when MOCK_OLLAMA=true (no HTTP).
+ * @param {string} topic
+ */
+export function mockMultiPlatformPack(topic) {
+  const t = String(topic || 'Demo topic').trim();
+  const site = config.brand.website.replace(/\/$/, '');
+  return {
+    facebook: `${t}\nGrow with ${config.brand.name}\nVisit: ${site}`,
+    twitter: `${t} — start with ${config.brand.name}. ${site}`,
+    linkedin: `${t}\n\nAt ${config.brand.name} we help students find verified internships.\n\nApply: ${site}`,
+    linkedinComment: `What's your biggest internship question? Drop it below — Team ${config.brand.name}`,
+    youtubeTitle: t.slice(0, 90),
+    youtubeDescription: `${t}\n\n0:00 Intro\n0:30 Why ${config.brand.name}\n1:00 Next steps\n\n${site}`,
+    whatsapp: `Hi! ${t} — explore opportunities at ${site}`,
+    facebookCreative: defaultFacebookCreative(t),
+    defaulted: [],
+    mocked: true,
+  };
+}
+
+/** @returns {boolean} */
+export function isMockOllama() {
+  return String(process.env.MOCK_OLLAMA || '').toLowerCase() === 'true';
+}
+
+/**
+ * Feature 153: brand brief must exist and be non-empty.
+ * @returns {{ ok: true } | { ok: false, error: string }}
+ */
+export function assertBrandBrief() {
+  const p = config.brand.profilePath;
+  try {
+    const text = fs.readFileSync(p, 'utf8').trim();
+    if (!text) {
+      return {
+        ok: false,
+        error: `Brand brief is empty: ${p}. Add content to config/brand/airepro.md`,
+      };
+    }
+    return { ok: true };
+  } catch {
+    return {
+      ok: false,
+      error: `Brand brief missing: ${p}. Create config/brand/airepro.md before polishing.`,
+    };
+  }
+}
+
+/**
  * Build FacebookCreativeFields from parsed section map + defaults.
  * @param {Record<string, string>} sections
  * @param {string} topic
@@ -410,6 +513,7 @@ function fallbackPack(topic, singleFacebook) {
     facebook: fb,
     twitter: tw,
     linkedin: fb,
+    linkedinComment: '',
     youtubeTitle: topic.slice(0, 100),
     youtubeDescription: `${fb}\n\n#content #video`,
     whatsapp: wa,
@@ -428,6 +532,9 @@ function ollamaBaseUrl() {
  * @returns {Promise<void>}
  */
 export async function assertOllamaReady() {
+  // Feature 249/248: offline mock path — skip live Ollama probe.
+  if (isMockOllama()) return;
+
   const base = ollamaBaseUrl();
   const model = config.ollama.model;
   const tagsUrl = `${base}/api/tags`;
@@ -462,7 +569,9 @@ export async function assertOllamaReady() {
   }
 
   const names = (Array.isArray(data.models) ? data.models : [])
-    .map((m) => (typeof m?.name === 'string' ? m.name : typeof m?.model === 'string' ? m.model : ''))
+    .map((m) =>
+      typeof m?.name === 'string' ? m.name : typeof m?.model === 'string' ? m.model : ''
+    )
     .filter(Boolean);
 
   const hasModel =
@@ -552,7 +661,9 @@ async function ollamaGenerate(url, body, opts = {}) {
     const ok = !errMsg;
     return { ok, status: ok ? 200 : 500, data, text };
   } catch (e) {
-    throw new Error(`Ollama request failed (is Ollama running at ${ollamaBaseUrl()}?): ${e.message}`);
+    throw new Error(
+      `Ollama request failed (is Ollama running at ${ollamaBaseUrl()}?): ${e.message}`
+    );
   } finally {
     try {
       fs.unlinkSync(tmpIn);
@@ -565,7 +676,7 @@ async function ollamaGenerate(url, body, opts = {}) {
 /**
  * Generate structured Facebook creative fields (caption + template slots).
  * @param {string} topic
- * @param {{ signal?: AbortSignal }} [opts]
+ * @param {{ signal?: AbortSignal, tone?: string }} [opts]
  * @returns {Promise<FacebookCreativeFields>}
  */
 export async function generateFacebookCreative(topic, opts = {}) {
@@ -579,7 +690,7 @@ export async function generateFacebookCreative(topic, opts = {}) {
   const url = `${base}/api/generate`;
   const body = {
     model: config.ollama.model,
-    prompt: buildPromptForPlatform(topic.trim(), 'facebook'),
+    prompt: buildPromptForPlatform(topic.trim(), 'facebook', { tone: opts.tone }),
     stream: false,
   };
 
@@ -625,11 +736,12 @@ export async function generateFacebookCreative(topic, opts = {}) {
 
 /**
  * @param {string} topic
- * @param {{ signal?: AbortSignal }} [opts]
+ * @param {{ signal?: AbortSignal, tone?: string }} [opts]
  * @returns {Promise<{
  *   facebook: string,
  *   twitter: string,
  *   linkedin: string,
+ *   linkedinComment: string,
  *   youtubeTitle: string,
  *   youtubeDescription: string,
  *   whatsapp: string,
@@ -641,6 +753,14 @@ export async function generateMultiPlatformPack(topic, opts = {}) {
     throw new Error('Topic is required for generateMultiPlatformPack()');
   }
 
+  const brief = assertBrandBrief();
+  if (!brief.ok) throw new Error(brief.error);
+
+  if (isMockOllama()) {
+    logger.info('MOCK_OLLAMA=true — returning canned pack (no HTTP)');
+    return mockMultiPlatformPack(topic.trim());
+  }
+
   await assertOllamaReady();
 
   const base = ollamaBaseUrl();
@@ -648,7 +768,11 @@ export async function generateMultiPlatformPack(topic, opts = {}) {
 
   const body = {
     model: config.ollama.model,
-    prompt: buildMultiPlatformPrompt(topic.trim()),
+    prompt: buildMultiPlatformPrompt(topic.trim(), {
+      tone: opts.tone,
+      language: opts.language,
+      length: opts.length,
+    }),
     stream: false,
   };
 
@@ -710,15 +834,17 @@ export async function generateMultiPlatformPack(topic, opts = {}) {
           .trim()
           .slice(0, config.twitter.maxChars || 280);
       } else {
-        pack.twitter = twitter.length > (config.twitter.maxChars || 280)
-          ? `${twitter.slice(0, (config.twitter.maxChars || 280) - 1)}…`
-          : twitter;
+        pack.twitter =
+          twitter.length > (config.twitter.maxChars || 280)
+            ? `${twitter.slice(0, (config.twitter.maxChars || 280) - 1)}…`
+            : twitter;
       }
       if (!linkedin) {
         pack.linkedin = await generatePost(topic, { platform: 'linkedin' });
       } else {
         pack.linkedin = linkedin;
       }
+      pack.linkedinComment = (sections.linkedin_comment || '').trim();
       if (!youtubeTitle || !youtubeDescription) {
         const yt = await generatePost(topic, { platform: 'youtube' });
         const titleLine = yt.match(/TITLE:\s*(.+)/i);
@@ -749,9 +875,10 @@ export async function generateMultiPlatformPack(topic, opts = {}) {
     youtubeDescription = descLine ? descLine[1].trim() : `${facebook}\n\n#shorts #video`;
   }
 
-  const twFinal = twitter.length > (config.twitter.maxChars || 280)
-    ? `${twitter.slice(0, (config.twitter.maxChars || 280) - 1)}…`
-    : twitter;
+  const twFinal =
+    twitter.length > (config.twitter.maxChars || 280)
+      ? `${twitter.slice(0, (config.twitter.maxChars || 280) - 1)}…`
+      : twitter;
 
   let whatsapp = (sections.whatsapp || '').trim();
   if (!whatsapp) {
@@ -764,6 +891,7 @@ export async function generateMultiPlatformPack(topic, opts = {}) {
     facebook,
     twitter: twFinal,
     linkedin,
+    linkedinComment: (sections.linkedin_comment || '').trim(),
     youtubeTitle,
     youtubeDescription,
     whatsapp,
@@ -774,7 +902,7 @@ export async function generateMultiPlatformPack(topic, opts = {}) {
 /**
  * Calls Ollama /api/generate for a single platform.
  * @param {string} topic
- * @param {{ platform?: Platform }} [options]
+ * @param {{ platform?: Platform, tone?: string }} [options]
  * @returns {Promise<string>}
  */
 export async function generatePost(topic, options = {}) {
@@ -785,7 +913,7 @@ export async function generatePost(topic, options = {}) {
 
   // Visual Facebook: return caption string (structured generate available via generateFacebookCreative)
   if (platform === 'facebook' && isFacebookVisualMode()) {
-    const creative = await generateFacebookCreative(topic);
+    const creative = await generateFacebookCreative(topic, { tone: options.tone });
     return creative.caption;
   }
 
@@ -794,7 +922,7 @@ export async function generatePost(topic, options = {}) {
 
   const body = {
     model: config.ollama.model,
-    prompt: buildPromptForPlatform(topic.trim(), platform),
+    prompt: buildPromptForPlatform(topic.trim(), platform, { tone: options.tone }),
     stream: false,
   };
 

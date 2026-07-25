@@ -1,0 +1,19 @@
+{
+  "snippets": [
+    {
+      "id": "cta-intern",
+      "label": "Internships CTA",
+      "text": "Explore verified internships at https://airepro.in/view/internships"
+    },
+    {
+      "id": "cta-site",
+      "label": "Site CTA",
+      "text": "Learn more at https://airepro.in"
+    },
+    {
+      "id": "footer-brand",
+      "label": "Brand footer",
+      "text": "— Team Airepro"
+    }
+  ]
+}

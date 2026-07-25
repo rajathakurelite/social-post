@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Central configuration: loads .env from the project root and exposes typed-ish settings.
  * Import this module once at app entry so all skills see the same env.
@@ -35,8 +36,7 @@ function loadBrand(profile) {
   if (!briefText) {
     throw new Error(`Brand brief is empty: ${profilePath}`);
   }
-  const internshipsUrl =
-    req('AIREPRO_INTERNSHIPS_URL') || 'https://airepro.in/view/internships';
+  const internshipsUrl = req('AIREPRO_INTERNSHIPS_URL') || 'https://airepro.in/view/internships';
   return {
     name,
     profilePath,
@@ -52,7 +52,7 @@ function loadBrand(profile) {
  * @param {string} envName
  * @returns {boolean}
  */
-function isEnabled(envName) {
+export function isEnabled(envName) {
   const v = req(envName).toLowerCase();
   if (!v) return true;
   return !['false', '0', 'no', 'off'].includes(v);
@@ -198,14 +198,18 @@ export function assertTwitterConfig() {
 export function assertLinkedInConfig() {
   const { accessToken, authorUrn } = config.linkedin;
   if (!accessToken || !authorUrn) {
-    throw new Error('Missing LINKEDIN_ACCESS_TOKEN or LINKEDIN_AUTHOR_URN (urn:li:person:... or urn:li:organization:...).');
+    throw new Error(
+      'Missing LINKEDIN_ACCESS_TOKEN or LINKEDIN_AUTHOR_URN (urn:li:person:... or urn:li:organization:...).'
+    );
   }
 }
 
 export function assertYouTubeConfig() {
   const y = config.youtube;
   if (!y.clientId || !y.clientSecret || !y.refreshToken) {
-    throw new Error('YouTube: set YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, and YOUTUBE_REFRESH_TOKEN.');
+    throw new Error(
+      'YouTube: set YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, and YOUTUBE_REFRESH_TOKEN.'
+    );
   }
   if (!y.videoId) {
     throw new Error(

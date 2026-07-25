@@ -1,0 +1,139 @@
+/*
+ * Airepro design tokens — single source of truth for the operator UI.
+ * Values extracted 1:1 from styles.css; changing a token here restyles the app.
+ * Legacy variable names (--bg0, --magenta, --radius, …) are aliased at the bottom
+ * so older references keep working.
+ */
+
+:root {
+  /* ——— Color: surfaces & text ——— */
+  --color-bg: #faf7fc;
+  --color-bg-deep: #f3eef8;
+  --color-surface: rgba(255, 255, 255, 0.78);
+  --color-surface-solid: #ffffff;
+  --color-surface-tint: #f8f4fb;
+  --color-white: #fff;
+  --color-text: #1a0f24;
+  --color-text-muted: #6b5a7a;
+  --color-border: rgba(88, 28, 135, 0.12);
+  --color-border-strong: rgba(190, 24, 93, 0.28);
+
+  /* ——— Color: brand ——— */
+  --color-accent: #c2186a;
+  --color-accent-bright: #e11d8f;
+  --color-violet: #6d28d9;
+  --color-violet-soft: #a78bfa;
+  --color-violet-deep: #4c1d95;
+
+  /* ——— Color: status ——— */
+  --color-ok: #059669;
+  --color-fail: #dc2626;
+  --color-warn: #d97706;
+
+  /* ——— Color: shared tints & overlays ——— */
+  --tint-accent-border: rgba(225, 29, 143, 0.4);
+  --tint-accent-deep-border: rgba(190, 24, 93, 0.35);
+  --tint-ok-border: rgba(5, 150, 105, 0.35);
+  --tint-ok-bg: rgba(5, 150, 105, 0.06);
+  --tint-warn-border: rgba(217, 119, 6, 0.35);
+  --tint-warn-bg: rgba(217, 119, 6, 0.06);
+  --tint-fail-border: rgba(220, 38, 38, 0.35);
+  --overlay-scrim: rgba(26, 15, 36, 0.45);
+  --overlay-scrim-strong: rgba(26, 15, 36, 0.88);
+
+  /* ——— Gradients ——— */
+  --gradient-accent: linear-gradient(120deg, var(--color-accent-bright), var(--color-violet));
+  --gradient-accent-soft: linear-gradient(
+    120deg,
+    rgba(225, 29, 143, 0.1),
+    rgba(109, 40, 217, 0.08)
+  );
+
+  /* ——— Typography: families ——— */
+  --font-body: 'Sora', system-ui, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-mono: ui-monospace, monospace;
+
+  /* ——— Typography: type ramp ——— */
+  --text-caption-2: 0.7rem;
+  --text-caption: 0.72rem;
+  --text-label: 0.78rem;
+  --text-hint: 0.8rem;
+  --text-ui: 0.88rem;
+  --text-body: 0.9rem;
+  --text-body-lg: 0.95rem;
+  --text-title-sm: 1rem;
+  --text-title: 1.2rem;
+  --text-title-lg: 1.25rem;
+  --text-brand: clamp(2.6rem, 5.5vw, 3.6rem);
+
+  /* ——— Typography: weights ——— */
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-black: 800;
+
+  /* ——— Spacing (0.25rem grid; in-between one-offs stay literal) ——— */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-9: 2.25rem;
+
+  /* ——— Radii ——— */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --radius-2xl: 16px;
+  --radius-pill: 999px;
+  --radius-round: 50%;
+
+  /* ——— Shadows ——— */
+  --shadow-card: 0 18px 50px rgba(88, 28, 135, 0.08);
+  --shadow-sticky: 0 14px 40px rgba(26, 15, 36, 0.12);
+  --shadow-toast: 0 16px 40px rgba(26, 15, 36, 0.14);
+  --shadow-modal: 0 24px 60px rgba(26, 15, 36, 0.28);
+  --shadow-btn-primary: 0 10px 28px rgba(225, 29, 143, 0.28);
+  --shadow-btn-danger: 0 10px 28px rgba(225, 29, 72, 0.28);
+  --shadow-focus: 0 0 0 3px rgba(225, 29, 143, 0.28);
+
+  /* ——— Motion ——— */
+  --dur-fast: 0.12s;
+  --dur-base: 0.15s;
+  --dur-med: 0.2s;
+  --dur-slow: 0.28s;
+  --dur-enter: 0.45s;
+  --dur-rise: 0.5s;
+  --dur-rise-lg: 0.55s;
+  --dur-spin: 0.7s;
+  --dur-shimmer: 1.2s;
+  --ease-default: ease;
+  --ease-in-out: ease-in-out;
+
+  /* ——— Legacy aliases (keep old names working) ——— */
+  --bg0: var(--color-bg);
+  --bg1: var(--color-bg-deep);
+  --surface: var(--color-surface);
+  --surface-solid: var(--color-surface-solid);
+  --border: var(--color-border);
+  --border-strong: var(--color-border-strong);
+  --text: var(--color-text);
+  --muted: var(--color-text-muted);
+  --magenta: var(--color-accent);
+  --magenta-bright: var(--color-accent-bright);
+  --purple: var(--color-violet);
+  --purple-soft: var(--color-violet-soft);
+  --ok: var(--color-ok);
+  --fail: var(--color-fail);
+  --warn: var(--color-warn);
+  --radius: var(--radius-2xl);
+  --font: var(--font-body);
+  --display: var(--font-display);
+  --shadow: var(--shadow-card);
+  --focus: var(--shadow-focus);
+}

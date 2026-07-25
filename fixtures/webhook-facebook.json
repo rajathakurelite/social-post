@@ -1,0 +1,16 @@
+{
+  "object": "page",
+  "entry": [
+    {
+      "id": "PAGE",
+      "messaging": [
+        {
+          "sender": { "id": "PSID_FIXTURE" },
+          "recipient": { "id": "PAGE" },
+          "timestamp": 9999999999999,
+          "message": { "mid": "mid.fixture", "text": "hello internship" }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "ok": true,
+  "dryRun": true,
+  "results": [{ "platform": "twitter", "ok": true, "dryRun": true, "id": "dry-tw-fixture" }]
+}

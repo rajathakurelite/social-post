@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Skill: publish a post on X (Twitter) using API v2.
  * Supports OAuth 2.0 user access token (Bearer) OR OAuth 1.0a user context (HMAC-SHA1).

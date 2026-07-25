@@ -1,352 +1,539 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Airepro Internship Creative</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --magenta: #c4007a;
-      --magenta-bright: #e6007e;
-      --purple-deep: #4a148c;
-      --purple-mid: #6a1b9a;
-      --purple-soft: #9c27b0;
-      --orange: #ef6c00;
-      --ink: #1a1a2e;
-      --muted: #4a4a5a;
-      --white: #ffffff;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Airepro Internship Creative</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        /* Theme tokens — overridden per theme by __applyCreative (skills/render_creative.js CREATIVE_THEMES). */
+        --primary: #c4007a;
+        --primary-bright: #e6007e;
+        --deep: #4a148c;
+        --mid: #6a1b9a;
+        --soft: #9c27b0;
+        --accent2: #ef6c00;
+        --ink: #1a1a2e;
+        --muted: #4a4a5a;
+        --bg: #ffffff;
+        --cta-from: #3d0a6e;
+        --cta-to: #7b1fa2;
+        --white: #ffffff;
+      }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-    html, body {
-      width: 1080px;
-      height: 1080px;
-      overflow: hidden;
-      background: #fff;
-      font-family: "Montserrat", Arial, sans-serif;
-      color: var(--ink);
-    }
+      html,
+      body {
+        width: 1080px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--bg);
+        font-family: 'Montserrat', Arial, sans-serif;
+        color: var(--ink);
+      }
 
-    .canvas {
-      position: relative;
-      width: 1080px;
-      height: 1080px;
-      background: #fff;
-      overflow: hidden;
-    }
+      .canvas {
+        position: relative;
+        width: 1080px;
+        height: 1080px;
+        background: var(--bg);
+        overflow: hidden;
+      }
 
-    /* Decorative doodles */
-    .doodle {
-      position: absolute;
-      opacity: 0.18;
-      color: var(--purple-soft);
-      pointer-events: none;
-    }
-    .doodle.cap { top: 150px; left: 420px; font-size: 42px; }
-    .doodle.glass { top: 520px; left: 470px; font-size: 36px; }
-    .doodle.id { top: 620px; left: 40px; font-size: 34px; }
-    .doodle.plane {
-      top: 180px; left: 280px; font-size: 28px;
-      transform: rotate(-18deg);
-    }
+      /* Decorative doodles */
+      .doodle {
+        position: absolute;
+        opacity: 0.18;
+        color: var(--soft);
+        pointer-events: none;
+      }
+      .doodle.cap {
+        top: 150px;
+        left: 420px;
+        font-size: 42px;
+      }
+      .doodle.glass {
+        top: 520px;
+        left: 470px;
+        font-size: 36px;
+      }
+      .doodle.id {
+        top: 620px;
+        left: 40px;
+        font-size: 34px;
+      }
+      .doodle.plane {
+        top: 180px;
+        left: 280px;
+        font-size: 28px;
+        transform: rotate(-18deg);
+      }
 
-    .magenta-arc {
-      position: absolute;
-      right: -180px;
-      top: 80px;
-      width: 720px;
-      height: 720px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 35% 40%, #ff2d95 0%, #c4007a 45%, #8e24aa 100%);
-      z-index: 1;
-    }
+      .magenta-arc {
+        position: absolute;
+        right: -180px;
+        top: 80px;
+        width: 720px;
+        height: 720px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 35% 40%,
+          var(--primary-bright) 0%,
+          var(--primary) 45%,
+          var(--soft) 100%
+        );
+        z-index: 1;
+      }
 
-    .header {
-      position: absolute;
-      top: 36px;
-      left: 40px;
-      right: 40px;
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      z-index: 5;
-    }
+      .header {
+        position: absolute;
+        top: 36px;
+        left: 40px;
+        right: 40px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        z-index: 5;
+      }
 
-    .logo {
-      height: 56px;
-      width: auto;
-    }
+      .logo {
+        height: 56px;
+        width: auto;
+      }
 
-    .tagline {
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--ink);
-    }
-    .tagline strong { font-weight: 800; }
+      .tagline {
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .tagline strong {
+        font-weight: 800;
+      }
 
-    .hero {
-      position: absolute;
-      right: -20px;
-      top: 90px;
-      width: 520px;
-      height: 720px;
-      object-fit: cover;
-      object-position: 72% 18%;
-      z-index: 3;
-      filter: drop-shadow(0 12px 24px rgba(0,0,0,0.18));
-    }
+      .hero {
+        position: absolute;
+        right: -20px;
+        top: 90px;
+        width: 520px;
+        height: 720px;
+        object-fit: cover;
+        object-position: 72% 18%;
+        z-index: 3;
+        filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.18));
+      }
 
-    .copy {
-      position: absolute;
-      left: 48px;
-      top: 160px;
-      width: 520px;
-      z-index: 4;
-    }
+      .copy {
+        position: absolute;
+        left: 48px;
+        top: 160px;
+        width: 520px;
+        z-index: 4;
+      }
 
-    .headline {
-      font-size: 54px;
-      font-weight: 900;
-      line-height: 1.08;
-      letter-spacing: -0.5px;
-      text-transform: uppercase;
-      color: var(--ink);
-    }
+      .headline {
+        font-size: 54px;
+        font-weight: 900;
+        line-height: 1.08;
+        letter-spacing: -0.5px;
+        text-transform: uppercase;
+        color: var(--ink);
+        max-height: 260px;
+        overflow: hidden;
+      }
 
-    .headline .accent {
-      color: var(--magenta-bright);
-    }
+      .headline .accent {
+        color: var(--primary-bright);
+      }
 
-    .subhead {
-      display: inline-block;
-      margin-top: 22px;
-      padding: 12px 22px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, var(--magenta-bright), var(--purple-mid));
-      color: #fff;
-      font-size: 16px;
-      font-weight: 700;
-      line-height: 1.3;
-      max-width: 100%;
-    }
+      .subhead {
+        display: inline-block;
+        margin-top: 22px;
+        padding: 12px 22px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--primary-bright), var(--mid));
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.3;
+        max-width: 100%;
+      }
 
-    .body {
-      margin-top: 18px;
-      font-size: 16px;
-      font-weight: 500;
-      line-height: 1.45;
-      color: var(--muted);
-      max-width: 480px;
-    }
+      .body {
+        margin-top: 18px;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1.45;
+        color: var(--muted);
+        max-width: 480px;
+      }
 
-    .benefits {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px 16px;
-      margin-top: 28px;
-      width: 480px;
-    }
+      .benefits {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px 16px;
+        margin-top: 28px;
+        width: 480px;
+      }
 
-    .benefit {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+      .benefit {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
 
-    .benefit .icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      color: #fff;
-      font-size: 20px;
-      flex-shrink: 0;
-      box-shadow: 0 4px 10px rgba(74, 20, 140, 0.25);
-    }
-    .benefit .icon.a { background: linear-gradient(135deg, #7b1fa2, #c4007a); }
-    .benefit .icon.b { background: linear-gradient(135deg, #ef6c00, #d84315); }
-    .benefit .icon.c { background: linear-gradient(135deg, #6a1b9a, #4527a0); }
-    .benefit .icon.d { background: linear-gradient(135deg, #8e24aa, #ad1457); }
+      .benefit .icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-size: 20px;
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(74, 20, 140, 0.25);
+      }
+      .benefit .icon.a {
+        background: linear-gradient(135deg, var(--mid), var(--primary));
+      }
+      .benefit .icon.b {
+        background: linear-gradient(135deg, var(--accent2), var(--primary));
+      }
+      .benefit .icon.c {
+        background: linear-gradient(135deg, var(--mid), var(--deep));
+      }
+      .benefit .icon.d {
+        background: linear-gradient(135deg, var(--soft), var(--primary));
+      }
 
-    .benefit span {
-      font-size: 14px;
-      font-weight: 700;
-      line-height: 1.25;
-      color: var(--ink);
-    }
+      .benefit span {
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.25;
+        color: var(--ink);
+      }
 
-    .cta-band {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 72px;
-      height: 118px;
-      background: linear-gradient(90deg, #3d0a6e 0%, #5b148c 40%, #7b1fa2 100%);
-      z-index: 6;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 48px 0 48px;
-      color: #fff;
-    }
+      .cta-band {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 72px;
+        height: 118px;
+        background: linear-gradient(90deg, var(--cta-from) 0%, var(--cta-to) 100%);
+        z-index: 6;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 48px 0 48px;
+        color: #fff;
+      }
 
-    .cta-copy {
-      font-size: 26px;
-      font-weight: 700;
-      max-width: 420px;
-      line-height: 1.25;
-    }
-    .cta-copy strong { color: #ff8ad8; }
+      .cta-copy {
+        font-size: 26px;
+        font-weight: 700;
+        max-width: 420px;
+        line-height: 1.25;
+      }
+      .cta-copy strong {
+        color: #ff8ad8;
+      }
 
-    .cta-box {
-      text-align: right;
-    }
+      .cta-box {
+        text-align: right;
+      }
 
-    .cta-btn {
-      display: inline-block;
-      background: #fff;
-      color: var(--magenta);
-      font-weight: 800;
-      font-size: 15px;
-      letter-spacing: 0.4px;
-      text-transform: uppercase;
-      padding: 10px 18px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-    }
+      .cta-btn {
+        display: inline-block;
+        background: #fff;
+        color: var(--primary);
+        font-weight: 800;
+        font-size: 15px;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        padding: 10px 18px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+      }
 
-    .cta-url {
-      display: inline-block;
-      border: 2px solid #ff4fa3;
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 16px;
-      font-weight: 700;
-      background: rgba(255,255,255,0.08);
-    }
+      .cta-url {
+        display: inline-block;
+        border: 2px solid var(--primary-bright);
+        border-radius: 8px;
+        padding: 8px 14px;
+        font-size: 16px;
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.08);
+      }
 
-    .footer {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 72px;
-      background: #fff;
-      border-top: 1px solid #eee;
-      z-index: 7;
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      padding: 0 24px;
-    }
+      .footer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 72px;
+        background: var(--bg);
+        border-top: 1px solid rgba(120, 120, 140, 0.25);
+        z-index: 7;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        padding: 0 24px;
+      }
 
-    .chip {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--ink);
-    }
+      .chip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--ink);
+      }
 
-    .chip .dot {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--magenta), var(--purple-mid));
-      color: #fff;
-      display: grid;
-      place-items: center;
-      font-size: 14px;
-    }
-  </style>
-</head>
-<body>
-  <div class="canvas" id="creative">
-    <div class="magenta-arc" aria-hidden="true"></div>
+      .chip .dot {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--mid));
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 14px;
+      }
 
-    <div class="doodle plane" aria-hidden="true">✈</div>
-    <div class="doodle cap" aria-hidden="true">🎓</div>
-    <div class="doodle glass" aria-hidden="true">🔍</div>
-    <div class="doodle id" aria-hidden="true">🪪</div>
+      /* ——— Template: poster (feature 117) — big centered headline, no hero/benefits ——— */
+      [data-template='poster'] .hero,
+      [data-template='poster'] .benefits,
+      [data-template='poster'] .doodle {
+        display: none;
+      }
+      [data-template='poster'] .magenta-arc {
+        right: -260px;
+        top: -260px;
+        width: 880px;
+        height: 880px;
+        opacity: 0.92;
+      }
+      [data-template='poster'] .copy {
+        left: 80px;
+        right: 80px;
+        top: 300px;
+        width: 920px;
+        text-align: center;
+      }
+      [data-template='poster'] .headline {
+        font-size: 88px;
+        line-height: 1.05;
+        max-height: 400px;
+      }
+      [data-template='poster'] .body {
+        margin: 22px auto 0;
+        max-width: 640px;
+        font-size: 19px;
+      }
+      [data-template='poster'] .subhead {
+        margin-top: 30px;
+        font-size: 19px;
+      }
 
-    <header class="header">
-      <img class="logo" src="../assets/airepro/logo.svg" alt="Airepro" />
-      <p class="tagline">Your <strong>future</strong>. Our <strong>mission</strong>.</p>
-    </header>
+      /* ——— Template: minimal (feature 117) — quiet editorial layout ——— */
+      [data-template='minimal'] .hero,
+      [data-template='minimal'] .benefits,
+      [data-template='minimal'] .doodle,
+      [data-template='minimal'] .magenta-arc,
+      [data-template='minimal'] .footer {
+        display: none;
+      }
+      [data-template='minimal'] .copy {
+        left: 96px;
+        top: 300px;
+        width: 880px;
+      }
+      [data-template='minimal'] .copy::before {
+        content: '';
+        display: block;
+        width: 120px;
+        height: 10px;
+        border-radius: 6px;
+        margin-bottom: 36px;
+        background: linear-gradient(90deg, var(--primary-bright), var(--mid));
+      }
+      [data-template='minimal'] .headline {
+        font-size: 72px;
+        max-height: 340px;
+      }
+      [data-template='minimal'] .body {
+        font-size: 20px;
+        max-width: 720px;
+      }
+      [data-template='minimal'] .subhead {
+        background: transparent;
+        color: var(--mid);
+        padding: 12px 0 0 0;
+        font-size: 20px;
+      }
+      [data-template='minimal'] .cta-band {
+        bottom: 0;
+        height: 140px;
+      }
 
-    <img class="hero" src="../assets/airepro/hero.svg" alt="" />
+      /* Dark theme readability tweaks */
+      [data-theme='dark'] .cta-btn {
+        color: var(--deep);
+      }
+    </style>
+  </head>
+  <body data-template="classic" data-theme="magenta">
+    <div class="canvas" id="creative">
+      <div class="magenta-arc" aria-hidden="true"></div>
 
-    <section class="copy">
-      <h1 class="headline" id="headline">FIND YOUR <span class="accent" id="accent">DREAM</span> INTERNSHIP</h1>
-      <p class="subhead" id="subhead">Start Building Your Career Today with Airepro</p>
-      <p class="body" id="body">Explore verified internships and opportunities that help you learn, grow and take the next step in your career.</p>
+      <div class="doodle plane" aria-hidden="true">✈</div>
+      <div class="doodle cap" aria-hidden="true">🎓</div>
+      <div class="doodle glass" aria-hidden="true">🔍</div>
+      <div class="doodle id" aria-hidden="true">🪪</div>
 
-      <div class="benefits">
-        <div class="benefit"><div class="icon a">🛡</div><span>Verified Internships</span></div>
-        <div class="benefit"><div class="icon b">🏢</div><span>Opportunities Across Multiple Domains</span></div>
-        <div class="benefit"><div class="icon c">💻</div><span>Build Real-World Experience</span></div>
-        <div class="benefit"><div class="icon d">📈</div><span>Grow Your Skills &amp; Career</span></div>
+      <header class="header">
+        <img class="logo" src="../assets/airepro/logo.svg" alt="Airepro" />
+        <p class="tagline">Your <strong>future</strong>. Our <strong>mission</strong>.</p>
+      </header>
+
+      <img class="hero" src="../assets/airepro/hero.svg" alt="" />
+
+      <section class="copy">
+        <h1 class="headline" id="headline">
+          FIND YOUR <span class="accent" id="accent">DREAM</span> INTERNSHIP
+        </h1>
+        <p class="subhead" id="subhead">Start Building Your Career Today with Airepro</p>
+        <p class="body" id="body">
+          Explore verified internships and opportunities that help you learn, grow and take the next
+          step in your career.
+        </p>
+
+        <div class="benefits">
+          <div class="benefit">
+            <div class="icon a">🛡</div>
+            <span>Verified Internships</span>
+          </div>
+          <div class="benefit">
+            <div class="icon b">🏢</div>
+            <span>Opportunities Across Multiple Domains</span>
+          </div>
+          <div class="benefit">
+            <div class="icon c">💻</div>
+            <span>Build Real-World Experience</span>
+          </div>
+          <div class="benefit">
+            <div class="icon d">📈</div>
+            <span>Grow Your Skills &amp; Career</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="cta-band">
+        <p class="cta-copy">Your future starts with <strong>one step</strong>.</p>
+        <div class="cta-box">
+          <div class="cta-btn" id="ctaLabel">Explore Internships Now</div>
+          <div class="cta-url" id="ctaUrl">airepro.in/view/internships</div>
+        </div>
       </div>
-    </section>
 
-    <div class="cta-band">
-      <p class="cta-copy">Your future starts with <strong>one step</strong>.</p>
-      <div class="cta-box">
-        <div class="cta-btn" id="ctaLabel">Explore Internships Now</div>
-        <div class="cta-url" id="ctaUrl">airepro.in/view/internships</div>
-      </div>
+      <footer class="footer">
+        <div class="chip">
+          <div class="dot">👥</div>
+          For Students &amp; Freshers
+        </div>
+        <div class="chip">
+          <div class="dot">🏠</div>
+          Remote &amp; On-site Opportunities
+        </div>
+        <div class="chip">
+          <div class="dot">🏅</div>
+          Opportunities That Matter
+        </div>
+      </footer>
     </div>
 
-    <footer class="footer">
-      <div class="chip"><div class="dot">👥</div>For Students &amp; Freshers</div>
-      <div class="chip"><div class="dot">🏠</div>Remote &amp; On-site Opportunities</div>
-      <div class="chip"><div class="dot">🏅</div>Opportunities That Matter</div>
-    </footer>
-  </div>
+    <script>
+      /**
+       * Fields set by render_creative.js via page.evaluate:
+       * headline, accent/accentWord, subhead, body, ctaLabel, ctaUrl,
+       * template ('classic'|'poster'|'minimal'), theme ('magenta'|'violet'|'dark'),
+       * themeVars ({ '--primary': '#…', … }), headlineFontPx (initial size from
+       * the shared headlineFontSize() heuristic — feature 138).
+       */
+      window.__applyCreative = function (fields) {
+        const f = fields || {};
 
-  <script>
-    /**
-     * Optional query params (set by render_creative.js via page.evaluate):
-     * headline, accent, subhead, body, ctaLabel, ctaUrl
-     * Accent word in headline is wrapped in .accent when present.
-     */
-    window.__applyCreative = function (fields) {
-      const f = fields || {};
-      const accent = String(f.accent || f.accentWord || 'DREAM').trim();
-      const rawHeadline = String(f.headline || 'FIND YOUR DREAM INTERNSHIP').trim();
-      const headlineEl = document.getElementById('headline');
-      const upper = rawHeadline.toUpperCase();
-      const accentUpper = accent.toUpperCase();
-      if (accentUpper && upper.includes(accentUpper)) {
-        const idx = upper.indexOf(accentUpper);
-        const before = rawHeadline.slice(0, idx);
-        const mid = rawHeadline.slice(idx, idx + accent.length);
-        const after = rawHeadline.slice(idx + accent.length);
-        headlineEl.innerHTML = '';
-        headlineEl.appendChild(document.createTextNode(before.toUpperCase()));
-        const span = document.createElement('span');
-        span.className = 'accent';
-        span.id = 'accent';
-        span.textContent = mid.toUpperCase();
-        headlineEl.appendChild(span);
-        headlineEl.appendChild(document.createTextNode(after.toUpperCase()));
-      } else {
-        headlineEl.textContent = upper;
-      }
-      if (f.subhead) document.getElementById('subhead').textContent = f.subhead;
-      if (f.body) document.getElementById('body').textContent = f.body;
-      if (f.ctaLabel) document.getElementById('ctaLabel').textContent = f.ctaLabel;
-      if (f.ctaUrl) {
-        const u = String(f.ctaUrl).replace(/^https?:\/\//i, '');
-        document.getElementById('ctaUrl').textContent = u;
-      }
-    };
-  </script>
-</body>
+        // Feature 117: named layout templates.
+        if (f.template) document.body.dataset.template = String(f.template);
+        // Feature 118: brand-safe color theme variants (tokens injected as CSS vars).
+        if (f.theme) document.body.dataset.theme = String(f.theme);
+        if (f.themeVars && typeof f.themeVars === 'object') {
+          for (const key of Object.keys(f.themeVars)) {
+            const value = f.themeVars[key];
+            if (typeof value === 'string' && key.indexOf('--') === 0) {
+              document.documentElement.style.setProperty(key, value);
+            }
+          }
+        }
+
+        const accent = String(f.accent || f.accentWord || 'DREAM').trim();
+        const rawHeadline = String(f.headline || 'FIND YOUR DREAM INTERNSHIP').trim();
+        const headlineEl = document.getElementById('headline');
+        const upper = rawHeadline.toUpperCase();
+        const accentUpper = accent.toUpperCase();
+        if (accentUpper && upper.includes(accentUpper)) {
+          const idx = upper.indexOf(accentUpper);
+          const before = rawHeadline.slice(0, idx);
+          const mid = rawHeadline.slice(idx, idx + accent.length);
+          const after = rawHeadline.slice(idx + accent.length);
+          headlineEl.innerHTML = '';
+          headlineEl.appendChild(document.createTextNode(before.toUpperCase()));
+          const span = document.createElement('span');
+          span.className = 'accent';
+          span.id = 'accent';
+          span.textContent = mid.toUpperCase();
+          headlineEl.appendChild(span);
+          headlineEl.appendChild(document.createTextNode(after.toUpperCase()));
+        } else {
+          headlineEl.textContent = upper;
+        }
+        if (f.subhead) document.getElementById('subhead').textContent = f.subhead;
+        if (f.body) document.getElementById('body').textContent = f.body;
+        if (f.ctaLabel) document.getElementById('ctaLabel').textContent = f.ctaLabel;
+        if (f.ctaUrl) {
+          const u = String(f.ctaUrl).replace(/^https?:\/\//i, '');
+          document.getElementById('ctaUrl').textContent = u;
+        }
+
+        // Feature 138: overflow guard — start from the heuristic size, then
+        // shrink stepwise until the headline fits its safe area.
+        if (typeof f.headlineFontPx === 'number' && f.headlineFontPx > 0) {
+          headlineEl.style.fontSize = f.headlineFontPx + 'px';
+        }
+        let size = parseFloat(window.getComputedStyle(headlineEl).fontSize) || 54;
+        const maxHeight = parseFloat(window.getComputedStyle(headlineEl).maxHeight) || 260;
+        let guard = 0;
+        while (
+          guard < 20 &&
+          size > 28 &&
+          (headlineEl.scrollHeight > maxHeight ||
+            headlineEl.scrollWidth > headlineEl.clientWidth + 2)
+        ) {
+          size -= 2;
+          headlineEl.style.fontSize = size + 'px';
+          guard += 1;
+        }
+      };
+    </script>
+  </body>
 </html>

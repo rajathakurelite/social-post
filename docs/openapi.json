@@ -1,0 +1,84 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ai-social-agent Operator API",
+    "version": "1.0.0",
+    "description": "Localhost operator console API (Wave-3 envelope: error, code, requestId)."
+  },
+  "servers": [{ "url": "http://127.0.0.1:8787" }],
+  "paths": {
+    "/api/health": {
+      "get": { "summary": "Health + armed flags", "responses": { "200": { "description": "ok" } } }
+    },
+    "/api/polish": {
+      "post": {
+        "summary": "Generate multi-platform pack",
+        "responses": { "200": { "description": "ok" }, "400": { "description": "validation" } }
+      }
+    },
+    "/api/publish": {
+      "post": {
+        "summary": "Publish (dry-run by default)",
+        "responses": {
+          "200": { "description": "ok" },
+          "403": { "description": "pinned/demo" },
+          "503": { "description": "paused" }
+        }
+      }
+    },
+    "/api/publish/history": {
+      "get": {
+        "summary": "Publish history",
+        "responses": { "200": { "description": "ok" }, "400": { "description": "bad limit" } }
+      }
+    },
+    "/api/publish/history.csv": {
+      "get": { "summary": "Publish history CSV", "responses": { "200": { "description": "csv" } } }
+    },
+    "/api/publish/topics": {
+      "get": { "summary": "Recent topics", "responses": { "200": { "description": "ok" } } }
+    },
+    "/api/schedule": {
+      "get": { "summary": "List schedules" },
+      "post": { "summary": "Queue schedule" }
+    },
+    "/api/drafts": { "get": { "summary": "List drafts" }, "post": { "summary": "Save draft" } },
+    "/api/compose/hashtag-packs": { "get": { "summary": "Hashtag packs" } },
+    "/api/compose/best-times": { "get": { "summary": "Best-time hints" } },
+    "/api/compose/lint-config": { "get": { "summary": "Content lint config" } },
+    "/api/compose/link-slugs": { "get": { "summary": "Link slugs" } },
+    "/api/compose/utm": {
+      "get": { "summary": "UTM settings" },
+      "put": { "summary": "Update UTM" }
+    },
+    "/api/compose/topic-chips": { "get": { "summary": "Topic chips" } },
+    "/api/compose/duplicate-check": { "post": { "summary": "Duplicate topic check" } },
+    "/api/compose/snippets": { "get": { "summary": "Snippet library" } },
+    "/api/compose/presets": { "get": { "summary": "Compose presets" } },
+    "/api/compose/broadcast-lists": { "get": { "summary": "WhatsApp broadcast lists" } },
+    "/api/compose/pack-import": { "post": { "summary": "Import markdown pack" } },
+    "/api/compose/weekly-plan": { "post": { "summary": "Generate 7 topic angles" } },
+    "/api/stats/publish": { "get": { "summary": "Publish stats aggregate" } },
+    "/api/ops/backups": { "get": { "summary": "List config backups" } },
+    "/api/ops/restore": { "post": { "summary": "Restore a backup" } },
+    "/api/ops/pause": { "get": { "summary": "Pause state" }, "post": { "summary": "Panic pause" } },
+    "/api/ops/resume": { "post": { "summary": "Resume outbound" } },
+    "/api/ops/config-export": { "get": { "summary": "Export config files" } },
+    "/api/ops/config-import": { "post": { "summary": "Import config (confirm required)" } },
+    "/api/docs": { "get": { "summary": "HTML docs viewer" } },
+    "/api/docs/openapi.json": { "get": { "summary": "OpenAPI JSON" } },
+    "/api/upload": { "post": { "summary": "Upload images" } },
+    "/api/auto-reply/rules": {
+      "get": { "summary": "List rules" },
+      "put": { "summary": "Save rules" }
+    },
+    "/api/auto-reply/settings": {
+      "get": { "summary": "Settings" },
+      "put": { "summary": "Save settings" }
+    },
+    "/api/webhooks/whatsapp": {
+      "get": { "summary": "WA verify" },
+      "post": { "summary": "WA inbound" }
+    }
+  }
+}

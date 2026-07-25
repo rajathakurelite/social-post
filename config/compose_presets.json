@@ -1,0 +1,20 @@
+{
+  "presets": [
+    {
+      "id": "career-formal",
+      "name": "Career formal",
+      "platforms": ["linkedin", "facebook"],
+      "tone": "formal",
+      "length": "medium",
+      "hashtagPackId": "career"
+    },
+    {
+      "id": "x-playful-short",
+      "name": "X playful short",
+      "platforms": ["twitter"],
+      "tone": "playful",
+      "length": "short",
+      "hashtagPackId": "internships"
+    }
+  ]
+}

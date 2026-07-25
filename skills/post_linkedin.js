@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Skill: create a public feed post on LinkedIn using the REST Posts API.
  * Requires: w_member_social (person) or w_organization_social (org) on the access token.
@@ -66,11 +67,7 @@ export async function postToLinkedIn(commentary) {
   }
 
   if (!res.ok) {
-    const msg =
-      data?.message ||
-      data?.errorDetails?.[0]?.message ||
-      data?.status ||
-      raw;
+    const msg = data?.message || data?.errorDetails?.[0]?.message || data?.status || raw;
     throw new Error(`LinkedIn API error ${res.status}: ${msg}`);
   }
 

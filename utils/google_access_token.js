@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Refresh a short-lived Google OAuth access token for YouTube Data API calls.
  */
@@ -11,7 +12,9 @@ import { fetchWithRetry } from './http_fetch.js';
 export async function refreshGoogleAccessToken(creds) {
   const { clientId, clientSecret, refreshToken } = creds;
   if (!clientId || !clientSecret || !refreshToken) {
-    throw new Error('YouTube OAuth: missing YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, or YOUTUBE_REFRESH_TOKEN');
+    throw new Error(
+      'YouTube OAuth: missing YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, or YOUTUBE_REFRESH_TOKEN'
+    );
   }
 
   const body = new URLSearchParams({
@@ -36,7 +39,9 @@ export async function refreshGoogleAccessToken(creds) {
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error(`Google token endpoint returned non-JSON (${res.status}): ${text.slice(0, 300)}`);
+    throw new Error(
+      `Google token endpoint returned non-JSON (${res.status}): ${text.slice(0, 300)}`
+    );
   }
 
   if (!res.ok || !data.access_token) {

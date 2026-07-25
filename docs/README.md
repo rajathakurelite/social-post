@@ -10,6 +10,8 @@ Per-network docs for **ai-social-agent**: what each skill does, required env var
 | [LinkedIn](./linkedin.md) | `skills/post_linkedin.js` | `LINKEDIN_ENABLED` |
 | [YouTube](./youtube.md) | `skills/post_youtube.js` | `YOUTUBE_ENABLED` |
 | [WhatsApp](./whatsapp.md) | `skills/post_whatsapp.js` | `WHATSAPP_ENABLED` |
+| [Auto-reply](./auto-reply.md) | `skills/auto_reply.js` | `AUTO_REPLY_ENABLED` (default off) |
+| [Compose Wave-3](./compose-wave3.md) | history, schedule, UTM, lint, drafts | `UI_FORCE_DRY_RUN` / `QUEUE_ARMED` |
 
 Full credential collection steps, team vault handoff, and plugin detail live in the root [README.md](../README.md).
 

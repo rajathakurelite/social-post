@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Skill: send a text message via WhatsApp Business Cloud API (Meta Graph).
  * Sends to one or more opted-in recipients (WHATSAPP_TO). Outside the 24h customer-care window,
@@ -19,9 +20,10 @@ function parseRecipients(raw) {
 
 /**
  * @param {string} message
+ * @param {{ to?: string | string[] }} [options] Optional recipient override (E.164 digits). Defaults to WHATSAPP_TO.
  * @returns {Promise<string>} Comma-separated wamid.* ids from the API
  */
-export async function postToWhatsApp(message) {
+export async function postToWhatsApp(message, options = {}) {
   assertWhatsAppConfig();
 
   const body = String(message || '').trim();
@@ -31,7 +33,14 @@ export async function postToWhatsApp(message) {
 
   const text = body.length > MAX_BODY ? `${body.slice(0, MAX_BODY - 1)}…` : body;
   const { accessToken, phoneNumberId, graphVersion } = config.whatsapp;
-  const recipients = parseRecipients(config.whatsapp.to);
+  const override = options.to != null ? options.to : null;
+  const recipients = parseRecipients(
+    override == null
+      ? config.whatsapp.to
+      : Array.isArray(override)
+        ? override.join(',')
+        : String(override)
+  );
 
   if (!recipients.length) {
     throw new Error(
@@ -44,7 +53,11 @@ export async function postToWhatsApp(message) {
 
   for (let i = 0; i < recipients.length; i++) {
     const to = recipients[i];
-    logger.info('Sending WhatsApp message', { to: `${to.slice(0, 4)}…`, index: i + 1, total: recipients.length });
+    logger.info('Sending WhatsApp message', {
+      to: `${to.slice(0, 4)}…`,
+      index: i + 1,
+      total: recipients.length,
+    });
 
     let res;
     try {

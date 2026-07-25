@@ -1,0 +1,10 @@
+{
+  "lists": [
+    {
+      "id": "demo-students",
+      "name": "Demo students",
+      "recipients": ["15550001111", "15550002222", "15550003333"],
+      "armed": false
+    }
+  ]
+}

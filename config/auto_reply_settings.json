@@ -1,0 +1,6 @@
+{
+  "matchMode": "first",
+  "maxRepliesPerHour": 60,
+  "stopWords": [],
+  "ignoreList": []
+}

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Skill: update an existing YouTube video's title and description (YouTube Data API v3).
  * Google does not expose "Community tab" text posts via the public Data API; this updates metadata on a video you already uploaded.
@@ -8,7 +9,7 @@ import { refreshGoogleAccessToken } from '../utils/google_access_token.js';
 import { fetchWithRetry } from '../utils/http_fetch.js';
 
 /**
- * @param {{ title: string, description: string }} meta
+ * @param {{ title: string, description: string, tags?: string | string[] }} meta
  * @returns {Promise<string>} video id
  */
 export async function postToYouTube(meta) {
@@ -59,11 +60,23 @@ export async function postToYouTube(meta) {
     throw new Error(`YouTube: video not found or inaccessible: ${videoId}`);
   }
 
+  /** Feature 124: operator-supplied tags override the existing video tags when provided. */
+  let tags = Array.isArray(item.snippet.tags) ? item.snippet.tags : [];
+  if (meta?.tags != null && String(meta.tags).trim()) {
+    const list = Array.isArray(meta.tags)
+      ? meta.tags
+      : String(meta.tags)
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean);
+    if (list.length) tags = list;
+  }
+
   const snippet = {
     title: title.slice(0, 100),
     description,
     categoryId: item.snippet.categoryId || '22',
-    tags: Array.isArray(item.snippet.tags) ? item.snippet.tags : [],
+    tags,
   };
 
   const updateUrl = new URL('https://www.googleapis.com/youtube/v3/videos');
@@ -90,7 +103,9 @@ export async function postToYouTube(meta) {
   try {
     updateData = updateText ? JSON.parse(updateText) : {};
   } catch {
-    throw new Error(`YouTube videos.update non-JSON (${updateRes.status}): ${updateText.slice(0, 400)}`);
+    throw new Error(
+      `YouTube videos.update non-JSON (${updateRes.status}): ${updateText.slice(0, 400)}`
+    );
   }
 
   if (!updateRes.ok || updateData.error) {

@@ -1,0 +1,8 @@
+{
+  "_comment": "Wave-3 experimental gates (234/235). Set false to hide a route with 404.",
+  "statsApi": true,
+  "weeklyPlan": true,
+  "webhookSimulator": true,
+  "openapiDocs": true,
+  "configImportExport": true
+}

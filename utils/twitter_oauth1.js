@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * OAuth 1.0a signing for Twitter / X API (user context) when using API key + secret + access token + secret.
  * See https://developer.twitter.com/en/docs/authentication/oauth-1-0a/creating-a-signature
@@ -26,11 +27,9 @@ export function oauth1Signature(method, url, oauthParams, consumerSecret, tokenS
   const paramString = keys
     .map((k) => `${encodeRfc3986(k)}=${encodeRfc3986(oauthParams[k])}`)
     .join('&');
-  const baseString = [
-    method.toUpperCase(),
-    encodeRfc3986(url),
-    encodeRfc3986(paramString),
-  ].join('&');
+  const baseString = [method.toUpperCase(), encodeRfc3986(url), encodeRfc3986(paramString)].join(
+    '&'
+  );
   const key = `${encodeRfc3986(consumerSecret)}&${encodeRfc3986(tokenSecret || '')}`;
   return crypto.createHmac('sha1', key).update(baseString).digest('base64');
 }
