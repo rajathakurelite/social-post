@@ -12,6 +12,8 @@ The runner checks `/api/tags` before generate. Unreachable host or missing `MODE
 
 Defaults if unset: `OLLAMA_URL=http://localhost:11434`, `MODEL=gemma:7b-instruct`, `BRAND_PROFILE=airepro`.
 
+Docker: if Ollama runs in a container named `ollama` on the host, use `OLLAMA_URL=http://127.0.0.1:11434`. Official library Kimi K2.x entries (`kimi-k2.6:cloud`, etc.) are cloud-only and need `ollama signin` (and may require a paid plan). For a free local Moonshot/Kimi-related model that fits typical RAM, pull community GGUF `richardyoung/kimi-vl-a3b-thinking:iq4_xs` (~8.8GB, Moonshot Kimi-VL-A3B-Thinking). Full local Kimi K2 (~1T) is impractical on consumer hardware.
+
 ## Required `.env` vars
 
 | Variable | Purpose |

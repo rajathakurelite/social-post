@@ -5,6 +5,7 @@ Per-network docs for **ai-social-agent**: what each skill does, required env var
 | Guide | Skill | Env enable flag |
 |-------|--------|-----------------|
 | [Ollama](./ollama.md) | `skills/generate_post.js` | — (always required for generation) |
+| [Kimi](./kimi.md) | Ollama `MODEL` tags (local / cloud) | — (same generation path; see runbook) |
 | [Facebook Page](./facebook.md) | `skills/post_facebook.js` | `FACEBOOK_ENABLED` |
 | [Twitter / X](./twitter.md) | `skills/post_twitter.js` | `TWITTER_ENABLED` |
 | [LinkedIn](./linkedin.md) | `skills/post_linkedin.js` | `LINKEDIN_ENABLED` |
